@@ -1,6 +1,6 @@
 package util
 
-func contains[T comparable](arr []T, val T) bool {
+func Contains[T comparable](arr []T, val T) bool {
 	for _, v := range arr {
 		if v == val {
 			return true
@@ -10,7 +10,7 @@ func contains[T comparable](arr []T, val T) bool {
 	return false
 }
 
-func remove[T comparable](arr []T, val T) []T {
+func Remove[T comparable](arr []T, val T) []T {
 	if len(arr) == 0 {
 		return arr
 	}
