@@ -1,6 +1,9 @@
 package sudoku
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // defines the size of the sudoku board and the values each tile can take on
 // Values range from 1-SIZE inclusive
@@ -32,13 +35,13 @@ func NewSudoku() Sudoku {
 }
 
 // Returns a sudoku board with
-func NewSudokuPartial(assignments [][]Value) Sudoku {
+func NewSudokuPartial(assignments [][]int) Sudoku {
 	var s = NewSudoku()
 
 	for rIdx, row := range assignments {
 		for cIdx, assignment := range row {
-			if assignment != EMPTY {
-				s.get(rIdx, cIdx).assign(assignment)
+			if Value(assignment) != EMPTY && assignment <= int(SIZE) {
+				s.get(rIdx, cIdx).assign(Value(assignment))
 			}
 		}
 	}
@@ -50,6 +53,31 @@ func (s Sudoku) get(rIdx int, cIdx int) *Tile {
 	return &s.arr[9*rIdx+cIdx]
 }
 
-func (s Sudoku) print() {
-	fmt.Println("sudoku print function")
+func (s Sudoku) toStr() string {
+	var sb strings.Builder
+
+	for i := 0; i < int(SIZE); i++ {
+		sb.WriteString(strings.Repeat("+----", int(SIZE)) + "+\n")
+		for j := 0; j < int(SIZE); j++ {
+			sb.WriteString("| ")
+
+			tile := s.get(i, j)
+			sb.WriteString(fmt.Sprint(tile.assignment))
+			// if tile.assignment == 0 {
+			// 	sb.WriteString("  ")
+			// } else {
+			// 	sb.WriteString(fmt.Sprint(tile))
+			// }
+
+			sb.WriteString(" ")
+		}
+		sb.WriteString("|\n")
+	}
+
+	sb.WriteString(strings.Repeat("+----", int(SIZE)) + "+\n")
+	return sb.String()
+}
+
+func (s Sudoku) Print() {
+	fmt.Print(s.toStr())
 }

@@ -2,7 +2,6 @@ package sudoku
 
 import (
 	"Sudoku-CSP/util"
-	"fmt"
 )
 
 /**
@@ -15,7 +14,7 @@ type Tile struct {
 
 func EmptyTile() Tile {
 	// initial domain of the empty tile is values 1-9
-	domain := make([]Value, 9)
+	var domain = make([]Value, 9)
 	for i := range domain {
 		domain[i] = Value(i + 1)
 	}
@@ -26,7 +25,7 @@ func EmptyTile() Tile {
 	}
 }
 
-func (t Tile) assign(val Value) {
+func (t *Tile) assign(val Value) {
 	if util.Contains(t.domain, val) {
 		t.assignment = val
 	}
@@ -38,8 +37,4 @@ func (t Tile) getDomain() []Value {
 
 func (t Tile) removeVal(val Value) {
 	t.domain = util.Remove(t.domain, val)
-}
-
-func (t Tile) print() {
-	fmt.Println("printing tile")
 }
