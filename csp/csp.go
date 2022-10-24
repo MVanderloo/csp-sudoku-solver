@@ -1,6 +1,9 @@
 package csp
 
-import "fmt"
+import (
+	"Sudoku-CSP/util"
+	"fmt"
+)
 
 /**
  * Value for the CSP
@@ -14,12 +17,28 @@ type Value interface {
  * Variable for the CSP
  * Holds a value that is optional and a domain of values it can take on
  **/
-type Variable[V Value] interface {
-	assign(V)       // assigns a value to the variable
-	getDomain() []V // gets the domain of values it can take on
-	removeVal(V)    // removes a value from the domain
-	print()         // print the variable
+type Variable[V Value] struct {
+	assignment V
+	domain     []V
 }
+
+func (v *Variable[V]) assign(val V) {
+	if util.Contains(v.domain, val) {
+		v.assignment = val
+		v.domain = nil
+	}
+}
+
+func (v Variable[V]) getDomain(val V) []V {
+	if util.Contains(v.domain, val) {
+		v.assignment = val
+		v.domain = nil
+	}
+}
+
+// getDomain() []V // gets the domain of values it can take on
+// removeVal(V)    // removes a value from the domain
+// print()         // print the variable
 
 type Constraint_t interface {
 	comparable // be able to check if a constraint is equal to another
@@ -30,17 +49,17 @@ type Constraint_t interface {
  * Constraint for the CSP
  **/
 type Constraint[C Constraint_t, V Value, X Variable[V]] struct {
-	name         C           // the name of the constraint
-	constrained  []*X        // the variables that are constrained
-	isSatisfied  func() bool // returns true if all the all the variables are assigned and are consistent
-	isAdmissable func() bool // returns true if there are not any inconsistencies in the variable assignments
+	name        C    // the name of the constraint
+	constrained []*X // the variables that are constrained
+	// isSatisfied  func() bool // returns true if all the all the variables are assigned and are consistent
+	// isAdmissable func() bool // returns true if there are not any inconsistencies in the variable assignments
 }
 
 /**
  * Prints the name of the constraint followed by the values of the variables it constrains
  * Could be improved by giving variables some identifier of where they are in the puzzle
  **/
-func (c Constraint[Constraint_t, Value, Variable]) print() {
+func (c Constraint[Constraint_t, Value, Variable]) Print() {
 	c.name.print()
 	fmt.Print(": ")
 	for i, val := range c.constrained {

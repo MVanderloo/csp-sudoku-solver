@@ -20,15 +20,27 @@ func EmptyTile() Tile {
 	}
 
 	return Tile{
-		0,
-		domain,
+		assignment: 0,
+		domain:     domain,
 	}
 }
 
+/**
+ * Assigns a value to the tile if it is in it's domain
+ **/
 func (t *Tile) assign(val Value) {
 	if util.Contains(t.domain, val) {
 		t.assignment = val
+		t.domain = nil
 	}
+}
+
+func (t Tile) domainContains(val Value) bool {
+	return util.Contains(t.domain, val)
+}
+
+func (t Tile) isAssigned() bool {
+	return t.assignment != EMPTY
 }
 
 func (t Tile) getDomain() []Value {
