@@ -1,15 +1,12 @@
 package sudoku
 
 import (
+	"Sudoku-CSP/csp"
 	"Sudoku-CSP/util"
 )
 
-/**
- * The tile implements the variable interface for the Sudoku puzzle CSP
- **/
 type Tile struct {
-	assignment Value
-	domain     []Value
+	value csp.Variable
 }
 
 func EmptyTile() Tile {
@@ -20,18 +17,10 @@ func EmptyTile() Tile {
 	}
 
 	return Tile{
-		assignment: 0,
-		domain:     domain,
-	}
-}
-
-/**
- * Assigns a value to the tile if it is in it's domain
- **/
-func (t *Tile) assign(val Value) {
-	if util.Contains(t.domain, val) {
-		t.assignment = val
-		t.domain = nil
+		value: csp.Variable{
+			assignment: EMPTY,
+			domain:     domain,
+		},
 	}
 }
 

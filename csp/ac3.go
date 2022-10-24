@@ -1,28 +1,35 @@
 package csp
 
-type Arc[V Value] struct {
-	x, y Variable[V]
-}
+// func AC3[V Value, X Variable[V], C Constraint_t](csp CSP[V, X, C]) bool {
+// 	var queue []Arc[V] = getArcs(csp.getVariables(), csp.getConstraints())
 
-func getArcs[V Value](variables []Variable[V], constraints []Constraint[C, V, Variable[V]]) []Arc[V] {
-	return []Arc[V]{}
-}
+// 	for len(queue) > 0 {
+// 		var x, y X
+// 		constrained, queue = removeFirst(queue)
+// 		if revise(csp, constrained) {
+// 		}
 
-func AC3[V Value, X Variable[V], C Constraint_t](csp CSP[V, X, C]) bool {
-	var queue []Arc[V] = getArcs(csp.getVariables(), csp.getConstraints())
+// 	}
 
-	for len(queue) > 0 {
-		var x, y X
-		constrained, queue = removeFirst(queue)
-		if revise(csp, constrained) {
-		}
+// 	return true
+// }
 
-	}
+// func revise[V Value, X Variable[V], C Constraint_t](csp CSP[V, X, C], xi X, xj X) bool {
+// 	var revised = false
 
-	return true
-}
+// 	for _, val := range xi.getDomain() {
+// 		if !satisfiesConstraints(val, csp.getConstraintsOf(xi, xj)) {
+// 			xi.removeVal(val)
+// 			revised = true
+// 		}
+// 	}
 
-func revise(CSP[V, X, C])
+// 	return revised
+// }
+
+// func satisfiesConstraints[Value V](val V, constraints []Constraint[C, V, X]) {
+
+// }
 
 // function AC-3(csp) returns false if an inconsistency is found and true otherwise
 //  inputs: csp, a binary CSP with components (X, D, C)

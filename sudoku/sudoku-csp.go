@@ -8,6 +8,6 @@ func (s Sudoku) getVariables() []Tile {
 	return s.arr[:]
 }
 
-func (s Sudoku) getConstraints() []SudokuConstraint {
+func (s Sudoku) getConstraints() []Constraint {
 	return s.constraints[:]
 }

@@ -11,7 +11,7 @@ const SIZE Value = BOX_SIZE * BOX_SIZE
 // Sudoku board is a flat array with length SIZE*SIZE projected as a square 2d array length SIZE
 type Sudoku struct {
 	arr         [SIZE * SIZE]Tile
-	constraints [3 * SIZE]SudokuConstraint
+	constraints [3 * SIZE]Constraint
 }
 
 // Returns a sudoku board with all tiles empty and
