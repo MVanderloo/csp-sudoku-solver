@@ -40,6 +40,9 @@ func (v Variable[V]) getDomain(val V) []V {
 // removeVal(V)    // removes a value from the domain
 // print()         // print the variable
 
+/**
+ * Different types of constraints to be implemented for the CSP
+ **/
 type Constraint_t interface {
 	comparable // be able to check if a constraint is equal to another
 	print()    // print the constraint
@@ -51,8 +54,6 @@ type Constraint_t interface {
 type Constraint[C Constraint_t, V Value, X Variable[V]] struct {
 	name        C    // the name of the constraint
 	constrained []*X // the variables that are constrained
-	// isSatisfied  func() bool // returns true if all the all the variables are assigned and are consistent
-	// isAdmissable func() bool // returns true if there are not any inconsistencies in the variable assignments
 }
 
 /**
