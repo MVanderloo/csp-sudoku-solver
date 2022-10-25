@@ -1,6 +1,10 @@
 package sudoku
 
-import "fmt"
+import (
+	. "Sudoku-CSP/csp"
+	"fmt"
+	"strings"
+)
 
 // defines the size of the sudoku board and the values each tile can take on
 // Values range from 1-SIZE inclusive
@@ -10,8 +14,8 @@ const SIZE Value = BOX_SIZE * BOX_SIZE
 
 // Sudoku board is a flat array with length SIZE*SIZE projected as a square 2d array length SIZE
 type Sudoku struct {
-	arr         [SIZE * SIZE]Tile
-	constraints [3 * SIZE]Constraint
+	arr         [SIZE * SIZE]Variable
+	constraints [3 * SIZE]Constraint // constraint for each row, col, and box
 }
 
 // Returns a sudoku board with all tiles empty and
@@ -19,14 +23,14 @@ func NewSudoku() Sudoku {
 	var s Sudoku
 
 	for i := range s.arr {
-		s.arr[i] = EmptyTile()
+		s.arr[i] = NewSudokuTile()
 	}
 
-	for i := 0; i < int(SIZE); i++ {
-		s.constraints[i] = newColConstraint(s, i)
-		s.constraints[i+int(SIZE)] = newRowConstraint(s, i)
-		s.constraints[i+2*int(SIZE)] = newBoxConstraint(s, i)
-	}
+	// for i := 0; i < int(SIZE); i++ {
+	// 	s.constraints[i] = newColConstraint(s, i)
+	// 	s.constraints[i+int(SIZE)] = newRowConstraint(s, i)
+	// 	s.constraints[i+2*int(SIZE)] = newBoxConstraint(s, i)
+	// }
 
 	return s
 }
@@ -35,9 +39,10 @@ func NewSudoku() Sudoku {
 func NewSudokuPartial(assignments [][]int) Sudoku {
 	var s = NewSudoku()
 
-	if assignments == nil {
-		return s
-	}
+	// test that i dont need this then delete
+	// if assignments == nil {
+	// 	return s
+	// }
 
 	for rIdx, row := range assignments {
 		if row == nil {
@@ -46,8 +51,7 @@ func NewSudokuPartial(assignments [][]int) Sudoku {
 
 		for cIdx, assignment := range row {
 			if Value(assignment) != EMPTY && assignment <= int(SIZE) {
-				// fmt.Printf("row: %v, col: %v = %v\n", rIdx, cIdx, assignment)
-				s.get(rIdx, cIdx).assign(Value(assignment))
+				s.get(rIdx, cIdx).Assign(Value(assignment))
 			}
 		}
 	}
@@ -55,13 +59,27 @@ func NewSudokuPartial(assignments [][]int) Sudoku {
 	return s
 }
 
-func (s *Sudoku) get(rIdx int, cIdx int) *Tile {
+func (s *Sudoku) get(rIdx int, cIdx int) *Variable {
 	return &s.arr[int(SIZE)*rIdx+cIdx]
 }
 
-func (s *Sudoku) getFromBoxIdx(boxRow, boxCol, row, col int) *Tile {
-	return &s.arr[int(SIZE)*(boxRow*int(BOX_SIZE)+row)+(boxCol*int(BOX_SIZE)+col)]
-}
+// func (s *Sudoku) getFromBoxIdx(boxRow, boxCol, row, col int) *Tile {
+// 	return &s.arr[int(SIZE)*(boxRow*int(BOX_SIZE)+row)+(boxCol*int(BOX_SIZE)+col)]
+// }
+
+// func (s *Sudoku) tileRowToString(boxRow, boxCol, row, col, tileRow int) string {
+// 	var tile *Tile = s.getFromBoxIdx(boxRow, boxCol, row, col)
+// 	if tile.variable.IsAssigned() {
+// 		if tileRow == int(BOX_SIZE)/2 {
+// 			var spacer = strings.Repeat(" ", int(BOX_SIZE)/2)
+// 			return spacer + fmt.Sprintf("%v", tile.variable.Assignment) + spacer
+// 		} else {
+// 			return strings.Repeat(" ", 2*int(BOX_SIZE)-1)
+// 		}
+// 	} else {
+// 		tileRow * int(BOX_SIZE)
+// 	}
+// }
 
 // func (s Sudoku) toStr() string {
 // 	var sb strings.Builder
@@ -201,5 +219,25 @@ func (s *Sudoku) getFromBoxIdx(boxRow, boxCol, row, col int) *Tile {
 // }
 
 func (s Sudoku) Print() {
-	fmt.Println("no")
+	fmt.Println("+" + strings.Repeat("+-----+-----+-----+", 3) + "+")
+	for j := 0; j < 3; j++ {
+		fmt.Print("|")
+		for i := 0; i < 3; i++ {
+			fmt.Println("|     |")
+		}
+		fmt.Print("|\n")
+		fmt.Print("|")
+		for i := 0; i < 3; i++ {
+			fmt.Println("|  " + fmt.Sprintf("%v", s.get(0, i).Assignment) + "  |")
+		}
+		fmt.Print("|\n")
+		fmt.Print("|")
+		for i := 0; i < 3; i++ {
+			fmt.Println("|     |")
+		}
+		fmt.Print("|\n")
+		fmt.Println("+" + strings.Repeat("+-----+-----+-----+", 3) + "+")
+	}
+
+	fmt.Println("+" + strings.Repeat("+-----+-----+-----+", 3) + "+")
 }

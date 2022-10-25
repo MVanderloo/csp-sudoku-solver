@@ -1,80 +1,59 @@
 package sudoku
 
-import "Sudoku-CSP/csp"
-
-type Constraint csp.Constraint[csp.Value]
+import . "Sudoku-CSP/csp"
 
 const (
-	NONE       csp.Constraint_t = iota // 0 Value for constraint
-	ALL_DIFF                           // All the listed values must be different
-	ALL_SAME                           // All the listed values must be the same
-	EQUALS                             // Both values must be the same
-	NOT_EQUALS                         // Both values must be different
-	SUM                                // Values must sum up to an amount
+	NONE       Constraint_t = iota // 0 Value for constraint
+	ALL_DIFF                       // All the listed values must be different
+	ALL_SAME                       // All the listed values must be the same
+	EQUALS                         // Both values must be the same
+	NOT_EQUALS                     // Both values must be different
+	SUM                            // Values must sum up to an amount
 )
 
-type BinaryConstraint struct {
-	constraint csp.Constraint_t
-	x1         *Tile
-	x2         *Tile
-}
+// func newRowConstraint(s Sudoku, row int) Constraint {
+// 	var constraint = NWayConstraint{
+// 		constraint: ALL_DIFF,
+// 		xn:         make([]*Tile, SIZE),
+// 	}
 
-func (c BinaryConstraint) canSatisfy(x *Tile, v Value) bool {
-	return true
-}
+// 	for i := range constraint.xn {
+// 		constraint.xn[i] = s.get(row, i)
+// 	}
 
-type NWayConstraint struct {
-	constraint csp.Constraint_t
-	xn         []*Tile
-}
+// 	return constraint
+// }
 
-func (c NWayConstraint) canSatisfy(x *Tile, v Value) bool {
-	return true
-}
+// func newColConstraint(s Sudoku, col int) Constraint {
+// 	var c = Constraint{
+// 		constraint:  NOT_EQUAL,
+// 		constrained: make([]*Tile, SIZE),
+// 	}
 
-func newRowConstraint(s Sudoku, row int) Constraint {
-	var constraint = NWayConstraint{
-		constraint: ALL_DIFF,
-		xn:         make([]*Tile, SIZE),
-	}
+// 	for i := range c.constrained {
+// 		c.constrained[i] = s.get(i, col)
+// 	}
 
-	for i := range constraint.xn {
-		constraint.xn[i] = s.get(row, i)
-	}
+// 	return c
+// }
 
-	return constraint
-}
+// func newBoxConstraint(s Sudoku, box int) Constraint {
+// 	var c = Constraint{
+// 		constraint:  NOT_EQUAL,
+// 		constrained: make([]*Tile, SIZE),
+// 	}
 
-func newColConstraint(s Sudoku, col int) Constraint {
-	var c = Constraint{
-		constraint:  NOT_EQUAL,
-		constrained: make([]*Tile, SIZE),
-	}
+// 	for i := range c.constrained {
+// 		// row and column of the box relative to other boxes
+// 		var boxRow int = box / int(BOX_SIZE)
+// 		var boxCol int = box % int(BOX_SIZE)
 
-	for i := range c.constrained {
-		c.constrained[i] = s.get(i, col)
-	}
+// 		// row and column of the ith element in the box
+// 		var row int = i / int(BOX_SIZE)
+// 		var col int = i % int(BOX_SIZE)
 
-	return c
-}
+// 		c.constrained[i] = s.get(row+int(BOX_SIZE)*boxRow, col+int(BOX_SIZE)*boxCol)
+// 	}
 
-func newBoxConstraint(s Sudoku, box int) Constraint {
-	var c = Constraint{
-		constraint:  NOT_EQUAL,
-		constrained: make([]*Tile, SIZE),
-	}
-
-	for i := range c.constrained {
-		// row and column of the box relative to other boxes
-		var boxRow int = box / int(BOX_SIZE)
-		var boxCol int = box % int(BOX_SIZE)
-
-		// row and column of the ith element in the box
-		var row int = i / int(BOX_SIZE)
-		var col int = i % int(BOX_SIZE)
-
-		c.constrained[i] = s.get(row+int(BOX_SIZE)*boxRow, col+int(BOX_SIZE)*boxCol)
-	}
-
-	return c
-}
+// 	return c
+// }
