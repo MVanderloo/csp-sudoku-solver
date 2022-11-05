@@ -1,5 +1,9 @@
 package csp
 
+// func backtrack(csp CSP, assignment Value) {
+// 	e
+// }
+
 // func AC3[V Value, X Variable[V], C Constraint_t](csp CSP[V, X, C]) bool {
 // 	var queue []Arc[V] = getArcs(csp.getVariables(), csp.getConstraints())
 

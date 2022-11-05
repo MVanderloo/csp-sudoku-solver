@@ -2,67 +2,73 @@ package csp
 
 import "Sudoku-CSP/util"
 
-/**
- * Variable for the CSP
- * Holds an optional value and a domain of values it can take on
- **/
 type Variable struct {
-	Assignment Value
-	Domain     []Value
+	assignment int
+	domain     []int
 }
 
 /**
  * Variable constructor
  **/
-func NewVariable(assignment Value, domain []Value) Variable {
+func NewVariable(assignment int, domain []int) Variable {
 	return Variable{
-		Assignment: assignment,
-		Domain:     domain,
+		assignment: assignment,
+		domain:     domain,
 	}
 }
 
-/**
- * Variable constructor. Sets assignment to EMPTY
- **/
-func NewUnassignedVariable(domain []Value) Variable {
-	return NewVariable(EMPTY, domain)
+func NewEmptyVariable(domain []int) Variable {
+	return NewVariable(-1, domain)
+}
+
+func NewAssignedVariable(assignment int) Variable {
+	return NewVariable(assignment, nil)
 }
 
 /**
- * Assigns a value to the tile if it is in it's domain
+ * Variable constructor.
  **/
-func (v *Variable) Assign(val Value) {
-	if util.Contains(v.Domain, val) {
-		v.Assignment = val
-		v.Domain = nil
+func NewSudokuVariable() Variable {
+	return Variable{
+		domain: []int{1, 2, 3, 4, 5, 6, 7, 8, 9},
 	}
-}
-
-/**
- * Returns a copy of the domain of the variable
- **/
-func (x Variable) GetDomain() []Value {
-	// return x.domain
-	return x.Domain[:] // copy of domain
 }
 
 /**
  * Removes a value from the domain of the variable
  **/
-func (x *Variable) RemoveVal(val Value) {
-	x.Domain = util.Remove(x.Domain, val)
-}
-
-/**
- * Checks if a variable has an assignment
- **/
-func (x Variable) IsAssigned() bool {
-	return x.Assignment != EMPTY
+func (v Variable) Remove(value int) {
+	v.domain = util.Remove(v.domain, value)
 }
 
 /**
  * Checks if a variable can take on a value
  **/
-func (x Variable) DomainContains(val Value) bool {
-	return util.Contains(x.Domain, val)
+func (v Variable) DomainContains(value int) bool {
+	return util.Contains(v.domain, value)
 }
+
+// /**
+//  * Assigns a value to the tile if it is in it's domain
+//  **/
+// func (v Variable) Assign(val Value) {
+// 	if Contains(v.Domain, val) {
+// 		v.Assignment = val
+// 		v.Domain = nil
+// 	}
+// }
+
+// /**
+//  * Returns a copy of the domain of the variable
+//  **/
+// func (x Variable) GetDomain() []Value {
+// 	// return x.domain
+// 	return x.Domain[:] // copy of domain
+// }
+
+// /**
+//  * Checks if a variable has an assignment
+//  **/
+// func (x Variable) IsAssigned() bool {
+// 	return len(x.Domain) == 1
+// }
