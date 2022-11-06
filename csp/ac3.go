@@ -1,56 +1,47 @@
 package csp
 
-// func backtrack(csp CSP, assignment Value) {
-// 	e
-// }
+import (
+	"Sudoku-CSP/util"
+)
 
-// func AC3[V Value, X Variable[V], C Constraint_t](csp CSP[V, X, C]) bool {
-// 	var queue []Arc[V] = getArcs(csp.getVariables(), csp.getConstraints())
+func Arc_reduce(x Variable, y Variable) (bool, Variable) {
+	var change bool = false
 
-// 	for len(queue) > 0 {
-// 		var x, y X
-// 		constrained, queue = removeFirst(queue)
-// 		if revise(csp, constrained) {
-// 		}
+	for _, x_value := range x.domain {
+		if !y.DomainContainsOtherThan(x_value) {
+			x = x.Remove(x_value)
+			change = true
+		}
+	}
 
-// 	}
+	return change, x
+}
 
-// 	return true
-// }
+func (csp CSP) AC3() bool {
+	var queue = []Arc{}
+	for _, constraint := range csp.constraints {
+		queue = append(queue, constraint.toArcs()...)
+	}
 
-// func revise[V Value, X Variable[V], C Constraint_t](csp CSP[V, X, C], xi X, xj X) bool {
-// 	var revised = false
+	var arc Arc
+	for len(queue) > 0 {
+		arc, queue = util.RemoveLast(queue)
 
-// 	for _, val := range xi.getDomain() {
-// 		if !satisfiesConstraints(val, csp.getConstraintsOf(xi, xj)) {
-// 			xi.removeVal(val)
-// 			revised = true
-// 		}
-// 	}
+		if revised, revised_var := Arc_reduce(csp.variables[arc.x1], csp.variables[arc.x2]); revised {
+			csp.variables[arc.x1] = revised_var
+			if len(csp.variables[arc.x1].domain) == 0 {
+				return false
+			}
 
-// 	return revised
-// }
+			var neighbors []int = csp.getNeighbors(arc.x1)
+			for _, neighbor := range neighbors {
+				var new_arc = Arc{neighbor, arc.x1}
+				if !util.Contains(queue, new_arc) {
+					queue = append(queue, new_arc)
+				}
+			}
+		}
+	}
 
-// func satisfiesConstraints[Value V](val V, constraints []Constraint[C, V, X]) {
-
-// }
-
-// function AC-3(csp) returns false if an inconsistency is found and true otherwise
-//  inputs: csp, a binary CSP with components (X, D, C)
-//  local variables: queue, a queue of arcs, initially all the arcs in csp
-
-//  while queue is not empty do
-//    (Xi, Xj) ← REMOVE-FIRST(queue)
-//    if REVISE(csp, Xi, Xj) then
-//      if size of Di = 0 then return false
-//      for each Xk in Xi.NEIGHBORS − {Xj} do
-//       add(Xk, Xi) to queue
-//  return true
-
-// function REVISE(csp, Xi, Xj) returns true iff we revise the domain of Xi
-//  revised ← false
-//  for each x in Di do
-//    if no value y in Dj allows (x, y) to satisfy the constraint between Xi and Xj then
-//     delete x from Di
-//     revised ← true
-//  return revised
+	return true
+}

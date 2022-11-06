@@ -30,6 +30,18 @@ func Remove[T comparable](arr []T, val T) []T {
 	return arr
 }
 
+func RemoveOrdered[T comparable](arr []T, val T) []T {
+	var ret = make([]T, 0)
+
+	for _, e := range arr {
+		if e != val {
+			ret = append(ret, e)
+		}
+	}
+
+	return ret
+}
+
 func RemoveFirst[T any](arr []T) (T, []T) {
 	if len(arr) == 0 {
 		var zero_val T
