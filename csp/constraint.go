@@ -85,27 +85,27 @@ func (c Constraint) constrains(variable int) bool {
 	return util.Contains(c.constrained, variable)
 }
 
-func (c Constraint) isSatisfied(assignment Assignment) bool {
-	switch c.getType() {
-	case NOT_EQUALS:
-		for i, e1 := range c.constrained {
-			for j, e2 := range c.constrained {
-				if i == j {
-					continue
-				} else if assignment[e1] == assignment[e2] {
-					return false
-				}
-			}
-		}
+// func (c Constraint) isSatisfied(assignment Assignment) bool {
+// 	switch c.getType() {
+// 	case NOT_EQUALS:
+// 		for i, e1 := range c.constrained {
+// 			for j, e2 := range c.constrained {
+// 				if i == j {
+// 					continue
+// 				} else if assignment[e1] == assignment[e2] {
+// 					return false
+// 				}
+// 			}
+// 		}
 
-	case SUM:
-		var sum int = 0
-		for _, e := range c.constrained {
-			sum += assignment[e]
-		}
-		return sum == c.sum
+// 	case SUM:
+// 		var sum int = 0
+// 		for _, e := range c.constrained {
+// 			sum += assignment[e]
+// 		}
+// 		return sum == c.sum
 
-	}
+// 	}
 
-	return true
-}
+// 	return true
+// }

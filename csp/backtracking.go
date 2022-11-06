@@ -1,6 +1,9 @@
 package csp
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type Assignment map[int]int
 
@@ -15,32 +18,33 @@ type Inference struct {
 }
 
 func (csp CSP) BacktrackingSearch(forwardChecking bool, mrv bool, lcv bool) Assignment {
-	return csp.Backtrack(make(Assignment), forwardChecking, mrv, lcv)
+	start := time.Now()
+	var res Assignment = csp.Backtrack(make(Assignment), forwardChecking, mrv, lcv)
+	duration := time.Since(start)
+	fmt.Println("Backtracking search:", duration.Milliseconds(), "(ms)")
+	return res
 }
 
 func (csp CSP) Backtrack(assignment Assignment, forwardChecking bool, mrv bool, lcv bool) Assignment {
-	fmt.Println("assignment:", assignment)
-	fmt.Println("isComplete(assignment) =", csp.isCompleteAssignment(assignment))
+	//fmt.Println("isComplete(assignment) =", csp.isCompleteAssignment(assignment))
 	if csp.isCompleteAssignment(assignment) {
 		return assignment
 	}
 
-	var variable = csp.selectUnassignedVariable(assignment)
-	fmt.Println("selecting variable", variable)
+	var variable = csp.selectUnassignedVariable(assignment, mrv)
+	//fmt.Println("selecting variable", variable)
 	for _, value := range csp.orderDomainValues(variable) {
-		fmt.Printf("csp.isConsistent(value: %v, variable: %v, %v) = %v\n", value, variable, assignment, csp.isConsistent(value, variable, assignment))
-		if csp.isConsistent(value, variable, assignment) {
-			assignment[variable] = value
+		//fmt.Printf("csp.isConsistent(value: %v, variable: %v, %v) = %v\n", value, variable, assignment, csp.isConsistent(value, variable, assignment))
+		assignment[variable] = value
+		if csp.isConsistent(variable, assignment) {
 			if forwardChecking {
 				var inferences []Inference = csp.forwardCheck(variable, assignment)
-				if len(inferences) != 0 {
-					csp.addInferences(inferences)
-					result := csp.Backtrack(assignment, forwardChecking, mrv, lcv)
-					if result != nil {
-						return result
-					}
-					csp.removeInferences(inferences)
+				csp.addInferences(inferences)
+				result := csp.Backtrack(assignment, forwardChecking, mrv, lcv)
+				if result != nil {
+					return result
 				}
+				csp.removeInferences(inferences)
 			} else {
 				result := csp.Backtrack(assignment, forwardChecking, mrv, lcv)
 				if result != nil {
@@ -48,24 +52,11 @@ func (csp CSP) Backtrack(assignment Assignment, forwardChecking bool, mrv bool, 
 				}
 			}
 		}
+		delete(assignment, variable)
 	}
+
 	return nil
 }
-
-// function BACKTRACK(sp, assignment) returns a solution or failure
-// 	if assignment is complete then return assignment
-// 	var = SELECT-UNASSIGNED-VARIABLE(csp, assignment)
-// 	for each value in ORDER-DOMAIN-VALUES(csp, var, assignment) do
-// 		if value is consistent with assignment then
-// 			add {var = value} to assignment
-// 			inferences = INFERENCE(csp, var, assignment)
-// 			if inferences != failure then
-// 				add inferences to csp
-// 				result = BACKTRACK(csp, assignment)
-// 				if result != failure then return result
-// 				remove inferences from csp
-// 			remove {var=value} from assignment
-// 	return failure
 
 func (csp CSP) isCompleteAssignment(assignment Assignment) bool {
 	// all variables have a value that is in their domain
@@ -89,13 +80,32 @@ func (csp CSP) isCompleteAssignment(assignment Assignment) bool {
 	return true
 }
 
-func (csp CSP) selectUnassignedVariable(assignment Assignment) int {
+func (csp CSP) selectUnassignedVariable(assignment Assignment, mrv bool) int {
+	var unassigned = []int{}
 	for variable := range csp.variables {
 		if _, ok := assignment[variable]; !ok {
-			return variable
+			if mrv {
+				unassigned = append(unassigned, variable)
+			} else {
+				return variable
+			}
 		}
 	}
-	panic("All variables have been assigned")
+
+	if len(unassigned) == 0 {
+		panic("All variables have been assigned")
+	}
+
+	var min_values int = len(csp.variables[unassigned[0]].domain)
+	var min_var int = unassigned[0]
+	for variable := range csp.variables {
+		if trial := len(csp.variables[variable].domain); trial < min_values {
+			min_values = trial
+			min_var = variable
+		}
+	}
+
+	return min_var
 }
 
 // the book says this function takes assignment so do this later
@@ -107,17 +117,16 @@ func (csp CSP) orderDomainValues(variable int) []int {
  * Checks that none of the constraints have been violated by the assignment of a variable
  * Only checks constraints relating to that variable
  **/
-func (csp CSP) isConsistent(value int, variable int, assignment Assignment) bool {
+func (csp CSP) isConsistent(variable int, assignment Assignment) bool {
 
 	for _, c := range csp.constraints {
 		if c.constrains(variable) {
 			switch c.getType() {
 			case NOT_EQUALS:
-
 				for _, cons_var := range c.constrained {
 					assigned_value, isAssigned := assignment[cons_var]
-					if cons_var != variable && isAssigned && assigned_value == value {
-						// fmt.Println("IsConsistent check:", cons_var, variable, isAssigned, assigned_value, value)
+					if cons_var != variable && isAssigned && assigned_value == assignment[variable] {
+						// fmt.Println("isConsistent not_equals:", cons_var, variable, isAssigned, assigned_value, value)
 						return false
 					}
 				}
@@ -132,6 +141,7 @@ func (csp CSP) isConsistent(value int, variable int, assignment Assignment) bool
 					if isAssigned {
 						sum += assigned_value
 						if sum > c.sum {
+							// fmt.Println("IsConsistent sum 1:", sum, c.sum)
 							return false
 						}
 					} else {
@@ -139,7 +149,10 @@ func (csp CSP) isConsistent(value int, variable int, assignment Assignment) bool
 					}
 				}
 
-				if (num_unassigned == 0 && sum == c.sum) || sum < c.sum {
+				// if (num_unassigned == 0 && sum == c.sum) || sum < c.sum-min_sum(num_unassigned) {
+				if (num_unassigned == 0 && sum == c.sum) || sum >= c.sum-min_sum(num_unassigned)+assignment[variable] {
+					panic("not here yet")
+					// fmt.Println("IsConsistent sum 2:", num_unassigned, sum, c.sum-min_sum(num_unassigned)+value)
 					return false
 				}
 			}
@@ -150,7 +163,18 @@ func (csp CSP) isConsistent(value int, variable int, assignment Assignment) bool
 }
 
 func (csp CSP) forwardCheck(variable int, assignment Assignment) []Inference {
-	return nil
+	var inferences = []Inference{}
+
+	for _, neighbor := range csp.getNeighbors(variable) {
+		if csp.variables[neighbor].Contains(assignment[variable]) {
+			inferences = append(inferences, Inference{
+				variable:     neighbor,
+				domain_value: assignment[variable],
+			})
+		}
+	}
+
+	return inferences
 }
 
 func (csp CSP) addInferences(inferences []Inference) {

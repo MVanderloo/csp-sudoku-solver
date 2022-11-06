@@ -2,6 +2,7 @@ package sudoku
 
 import (
 	"Sudoku-CSP/csp"
+	"fmt"
 )
 
 const BOX_SIZE int = 3
@@ -12,15 +13,15 @@ type Sudoku struct {
 }
 
 // Returns a sudoku board with the specified assignments
-func NewSudoku(assignments [][]int) Sudoku {
+func NewSudoku(arr [][]int) Sudoku {
 	var s = Sudoku{} // all values are 0
 
-	if assignments == nil {
+	if arr == nil {
 		return s
 	}
 
 	// input validation
-	for i, e1 := range assignments {
+	for i, e1 := range arr {
 		if e1 == nil { // if a row is nil it will be 0's
 			continue
 		}
@@ -33,11 +34,23 @@ func NewSudoku(assignments [][]int) Sudoku {
 			if e2 < 0 || e2 > SIZE { // ignore values not 0-9
 				s.arr[i][j] = 0
 			} else {
-				s.arr[i][j] = assignments[i][j]
+				s.arr[i][j] = arr[i][j]
 			}
 		}
 	}
 
+	return s
+}
+
+func NewSudokuFromAssignment(assignments map[int]int) Sudoku {
+	var ctr int = 0
+	var s = Sudoku{}
+	for i := 0; i < SIZE; i++ {
+		for j := 0; j < SIZE; j++ {
+			s.arr[i][j] = assignments[ctr]
+			ctr++
+		}
+	}
 	return s
 }
 
@@ -46,59 +59,72 @@ func NewSudoku(assignments [][]int) Sudoku {
  **/
 func (s Sudoku) ToCSP() csp.CSP {
 	var csp csp.CSP = csp.NewCSP()
-	type Cell struct{ row, col int }
+	type coord struct{ row, col int }
 	var id int = 0
-	var id_mapping = make(map[Cell]int)
+	var id_mapping = make(map[coord]int)
 
 	for i, row := range s.arr {
 		for j, e := range row {
-			id_mapping[Cell{i, j}] = id
+			id_mapping[coord{i, j}] = id
 			if e == 0 || (e < 0 || e > 9) {
 				csp.Insert(id, []int{1, 2, 3, 4, 5, 6, 7, 8, 9})
 			} else {
 				csp.Insert(id, []int{e})
 			}
+			id++
 		}
 	}
 
 	var constrained [9]int
-	var temp []int
 	for i := 0; i < SIZE; i++ {
 
 		// row constraints
 		for j := range constrained {
-			constrained[j] = id_mapping[Cell{i, j}]
+			constrained[j] = id_mapping[coord{i, j}]
 		}
 
-		copy(temp, constrained[:])
-		csp.Constrain(temp...)
+		csp.Constrain(constrained[:]...)
 
 		// column constraints
 		for j := range constrained {
-			constrained[j] = id_mapping[Cell{j, i}]
+			constrained[j] = id_mapping[coord{j, i}]
 		}
 
-		copy(temp, constrained[:])
-		csp.Constrain(temp...)
+		csp.Constrain(constrained[:]...)
 	}
 
 	// box constraints
 	for i := 0; i < BOX_SIZE*BOX_SIZE; i += BOX_SIZE {
 		for j := 0; j < BOX_SIZE*BOX_SIZE; j += BOX_SIZE {
-			constrained[0] = id_mapping[Cell{i, j}] // im not proud of this
-			constrained[1] = id_mapping[Cell{i + 1, j}]
-			constrained[2] = id_mapping[Cell{i + 2, j}]
-			constrained[3] = id_mapping[Cell{i, j + 1}]
-			constrained[4] = id_mapping[Cell{i + 1, j + 1}]
-			constrained[5] = id_mapping[Cell{i + 2, j + 1}]
-			constrained[6] = id_mapping[Cell{i, j + 2}]
-			constrained[7] = id_mapping[Cell{i + 1, j + 2}]
-			constrained[8] = id_mapping[Cell{i + 2, j + 2}]
+			constrained[0] = id_mapping[coord{i, j}] // im not proud of this
+			constrained[1] = id_mapping[coord{i, j + 1}]
+			constrained[2] = id_mapping[coord{i, j + 2}]
+			constrained[3] = id_mapping[coord{i + 1, j}]
+			constrained[4] = id_mapping[coord{i + 1, j + 1}]
+			constrained[5] = id_mapping[coord{i + 1, j + 2}]
+			constrained[6] = id_mapping[coord{i + 2, j}]
+			constrained[7] = id_mapping[coord{i + 2, j + 1}]
+			constrained[8] = id_mapping[coord{i + 2, j + 2}]
 
-			copy(temp, constrained[:])
-			csp.Constrain(temp...)
+			csp.Constrain(constrained[:]...)
 		}
 	}
 
 	return csp
+}
+
+func (s Sudoku) Print() {
+	for i, row := range s.arr {
+		for j, e := range row {
+			if j%3 == 0 {
+				fmt.Print(" ")
+			}
+			fmt.Print(e, " ")
+
+		}
+		if i%3 == 2 {
+			fmt.Println()
+		}
+		fmt.Println()
+	}
 }

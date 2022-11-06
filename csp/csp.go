@@ -38,7 +38,7 @@ func (csp *CSP) ConstrainSum(sum int, vars ...int) {
 }
 
 func (csp CSP) Print() {
-	fmt.Printf("variables: %v\nconstraints: %v\n", csp.variables, csp.constraints)
+	fmt.Printf("variables(%v): %v\nconstraints(%v): %v\n", len(csp.variables), csp.variables, len(csp.constraints), csp.constraints)
 }
 
 func (csp CSP) getNeighbors(variable int) []int {
@@ -53,4 +53,8 @@ func (csp CSP) getNeighbors(variable int) []int {
 		}
 	}
 	return neighbors
+}
+
+func (csp CSP) GetVar(n int) Variable {
+	return csp.variables[n]
 }

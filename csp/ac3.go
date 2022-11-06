@@ -27,7 +27,7 @@ func (csp CSP) AC3() bool {
 	for len(queue) > 0 {
 		arc, queue = util.RemoveLast(queue)
 
-		if revised, revised_var := Arc_reduce(csp.variables[arc.x1], csp.variables[arc.x2]); revised {
+		if wasRevised, revised_var := Arc_reduce(csp.variables[arc.x1], csp.variables[arc.x2]); wasRevised {
 			csp.variables[arc.x1] = revised_var
 			if len(csp.variables[arc.x1].domain) == 0 {
 				return false
