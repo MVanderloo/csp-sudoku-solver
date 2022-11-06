@@ -33,6 +33,14 @@ func (v Variable) Remove(value int) Variable {
 }
 
 /**
+ * Adds a value from the domain of the variable
+ **/
+func (v Variable) Add(value int) Variable {
+	v.domain = append(v.domain, value)
+	return v
+}
+
+/**
  * Checks if a variable can take on a value
  **/
 func (v Variable) Contains(value int) bool {

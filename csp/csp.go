@@ -21,8 +21,12 @@ func (csp CSP) Insert(id int, domain []int) {
 	csp.variables[id] = NewVariable(domain)
 }
 
-func (csp *CSP) RemoveFromDomain(id int, value int) {
-	csp.variables[id] = csp.variables[id].Remove(value)
+func (csp CSP) RemoveFromDomain(var_id int, value int) {
+	csp.variables[var_id] = csp.variables[var_id].Remove(value)
+}
+
+func (csp CSP) AddToDomain(var_id int, value int) {
+	csp.variables[var_id] = csp.variables[var_id].Add(value)
 }
 
 func (csp *CSP) Constrain(vars ...int) {
