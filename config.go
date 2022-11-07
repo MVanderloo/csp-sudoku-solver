@@ -1,4 +1,4 @@
-package sudoku
+package main
 
 import (
 	"encoding/json"
@@ -11,11 +11,11 @@ type Config struct {
 	Log_file string `json:"log file"`
 	Inputs   []struct {
 		Puzzle_type      int  `json:"puzzle type"`
-		File_name        int  `json:"file name"`
+		Puzzle_id        int  `json:"ID"`
 		Ac3              bool `json:"ac3"`
+		Forward_checking bool `json:"forward checking"`
 		Mrv              bool `json:"mrv"`
 		Lcv              bool `json:"lcv"`
-		Forward_checking bool `json:"forward checking"`
 	}
 }
 
@@ -48,8 +48,4 @@ func ReadConfig(config_file string) Config {
 	}
 
 	return config
-}
-
-func readSudoku(filename string) {
-
 }

@@ -11,6 +11,11 @@ type CSP struct {
 	constraints []Constraint
 }
 
+type Solveable interface {
+	ToCSP() CSP
+	Print()
+}
+
 func NewCSP() CSP {
 	return CSP{
 		variables:   []Variable{},
@@ -92,8 +97,8 @@ func (csp CSP) IsSatisfied(assignment Assignment) bool {
 		return false
 	}
 
-	for k, _ := range assignment {
-		if !csp.isConsistent(k, assignment) {
+	for v := range assignment {
+		if !csp.isConsistent(v, assignment) {
 			return false
 		}
 	}
