@@ -1,5 +1,11 @@
 package util
 
+import (
+	"bufio"
+	"log"
+	"os"
+)
+
 func Contains[T comparable](arr []T, val T) bool {
 	if arr == nil {
 		return false
@@ -88,6 +94,48 @@ func MinSlice[T int](arr []T) T {
 	return min
 }
 
-func fileExists(filename string) bool {
-	return true
+func FileExists(filepath string) bool {
+	_, err := os.Stat(filepath)
+	return err == nil
+}
+
+/**
+ * Reads a file line by line
+ **/
+func GetFileLines(f *os.File) []string {
+	var lines = make([]string, 0)
+	sc := bufio.NewScanner(f)
+
+	for sc.Scan() {
+		lines = append(lines, sc.Text())
+	}
+
+	if err := sc.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	return lines
+}
+
+func OpenFileRead(filepath string) *os.File {
+	f, err := os.OpenFile(filepath, os.O_RDONLY, os.ModePerm)
+	if err != nil {
+		log.Fatalf("open file error: %v", err)
+		return nil
+	}
+	return f
+}
+
+func OpenLogFile(filename string) *os.File {
+	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return f
+}
+
+func LogFileSpacer() string {
+	return "\n+----------------------------------+\n\n"
 }

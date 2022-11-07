@@ -8,15 +8,22 @@ import (
 )
 
 type Config struct {
-	Log_file string `json:"log file"`
-	Inputs   []struct {
-		Puzzle_type      int  `json:"puzzle type"`
-		Puzzle_id        int  `json:"ID"`
-		Ac3              bool `json:"ac3"`
-		Forward_checking bool `json:"forward checking"`
-		Mrv              bool `json:"mrv"`
-		Lcv              bool `json:"lcv"`
-	}
+	Log_file    string `json:"log file"`
+	Time_limit  int    `json:"time limit"`
+	Input_files struct {
+		Directory      string `json:"directory"`
+		Sudoku         string `json:"sudoku"`
+		Killer_sudoku  string `json:"killer sudoku"`
+		Overlap_sudoku string `json:"overlap sudoku"`
+	} `json:"input files"`
+	Inputs []struct {
+		Type             int    `json:"type"`
+		Presets          []int  `json:"presets"`
+		Ac3              []bool `json:"ac3"`
+		Forward_checking []bool `json:"forward checking"`
+		Mrv_heuristic    []bool `json:"mrv heuristic"`
+		Lcv_heuristic    []bool `json:"lcv heuristic"`
+	} `json:"inputs"`
 }
 
 func ConfigExists(config_file string) bool {
@@ -42,6 +49,39 @@ func ReadConfig(config_file string) Config {
 	}
 
 	var config Config
+	if err3 := json.Unmarshal(byteValue, &config); err3 != nil {
+		fmt.Printf("Invalid %v has invalid format for config file\n", config_file)
+		os.Exit(1)
+	}
+
+	return config
+}
+
+type KillerSudokuConfig struct {
+	Inputs []struct {
+		Sudoku string `json:"sudoku"`
+		Cages  []struct {
+			Sum    int8      `json:"sum"`
+			Coords [][2]int8 `json:"coords"`
+		} `json:"cages"`
+	} `json:"inputs"`
+}
+
+func ReadKillerSudokuConfig(config_file string) KillerSudokuConfig {
+	jsonFile, err := os.Open(config_file)
+	if err != nil {
+		panic(err)
+	}
+
+	defer jsonFile.Close()
+
+	byteValue, err2 := io.ReadAll(jsonFile)
+	if err2 != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	var config KillerSudokuConfig
 	if err3 := json.Unmarshal(byteValue, &config); err3 != nil {
 		fmt.Printf("Invalid %v has invalid format for config file\n", config_file)
 		os.Exit(1)

@@ -27,7 +27,7 @@ func NewCSP() CSP {
 /**
  * Inserts a variable with a domain into the CSP
  */
-func (csp *CSP) Insert(v int, domain Domain) {
+func (csp *CSP) Insert(v int8, domain Domain) {
 	if !util.Contains(csp.variables, Variable(v)) {
 		csp.variables = append(csp.variables, Variable(v))
 	}
@@ -37,14 +37,14 @@ func (csp *CSP) Insert(v int, domain Domain) {
 /**
  * Inserts a NOT_EQUALS constraint across vars into the CSP
  **/
-func (csp *CSP) Constrain(vars ...int) {
+func (csp *CSP) Constrain(vars ...int8) {
 	csp.constraints = append(csp.constraints, NewNotEqualsConstraint(vars...))
 }
 
 /**
  * Inserts a SUM constraint of sum across vars into the CSP
  **/
-func (csp *CSP) ConstrainSum(sum int, vars ...int) {
+func (csp *CSP) ConstrainSum(sum int8, vars ...int8) {
 	csp.constraints = append(csp.constraints, NewSumConstraint(sum, vars...))
 }
 
@@ -55,11 +55,11 @@ func (csp CSP) Print() {
 	fmt.Printf("variables(%v): %v\nconstraints(%v): %v\n", len(csp.variables), csp.domains, len(csp.constraints), csp.constraints)
 }
 
-func (csp CSP) removeFromDomain(v Variable, value int) {
+func (csp CSP) removeFromDomain(v Variable, value int8) {
 	csp.domains[v] = csp.domains[v].Remove(value)
 }
 
-func (csp CSP) addToDomain(v Variable, value int) {
+func (csp CSP) addToDomain(v Variable, value int8) {
 	csp.domains[v] = csp.domains[v].Add(value)
 }
 
@@ -84,12 +84,16 @@ func (csp CSP) GetDomain(v Variable) Domain {
 	return csp.domains[v]
 }
 
-func (csp CSP) GetVars() map[Variable]Domain {
+func (csp CSP) GetDomains() map[Variable]Domain {
 	return csp.domains
 }
 
 func (csp CSP) GetConstraints() []Constraint {
 	return csp.constraints
+}
+
+func (csp CSP) GetVariables() []Variable {
+	return csp.variables
 }
 
 func (csp CSP) IsSatisfied(assignment Assignment) bool {

@@ -4,7 +4,7 @@ import "Sudoku-CSP/util"
 
 type Constraint struct {
 	constrained []Variable
-	sum         int
+	sum         int8
 }
 
 type Constraint_t int8
@@ -22,7 +22,7 @@ func (c Constraint) getType() Constraint_t {
 	}
 }
 
-func NewNotEqualsConstraint(vars ...int) Constraint {
+func NewNotEqualsConstraint(vars ...int8) Constraint {
 	var constrained = []Variable{}
 	for _, variable := range vars {
 		if !util.Contains(constrained, Variable(variable)) {
@@ -35,7 +35,7 @@ func NewNotEqualsConstraint(vars ...int) Constraint {
 	}
 }
 
-func NewSumConstraint(sum int, vars ...int) Constraint {
+func NewSumConstraint(sum int8, vars ...int8) Constraint {
 	var constrained = []Variable{}
 	for _, variable := range vars {
 		if !util.Contains(constrained, Variable(variable)) {
@@ -51,8 +51,8 @@ func NewSumConstraint(sum int, vars ...int) Constraint {
 /**
  * Returns if the variable is constrained by the constraint
  **/
-func (c Constraint) constrains(variable Variable) bool {
-	return util.Contains(c.constrained, variable)
+func (c Constraint) constrains(v Variable) bool {
+	return util.Contains(c.constrained, v)
 }
 
 /**
@@ -61,28 +61,3 @@ func (c Constraint) constrains(variable Variable) bool {
 func (c Constraint) GetConstrained() []Variable {
 	return c.constrained
 }
-
-// func (c Constraint) isSatisfied(assignment Assignment) bool {
-// 	switch c.getType() {
-// 	case NOT_EQUALS:
-// 		for i, e1 := range c.constrained {
-// 			for j, e2 := range c.constrained {
-// 				if i == j {
-// 					continue
-// 				} else if assignment[e1] == assignment[e2] {
-// 					return false
-// 				}
-// 			}
-// 		}
-
-// 	case SUM:
-// 		var sum int = 0
-// 		for _, e := range c.constrained {
-// 			sum += assignment[e]
-// 		}
-// 		return sum == c.sum
-
-// 	}
-
-// 	return true
-// }

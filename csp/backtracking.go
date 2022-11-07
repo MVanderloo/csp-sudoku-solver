@@ -1,31 +1,34 @@
 package csp
 
 import (
-	"fmt"
 	"time"
 )
 
-type Assignment map[Variable]int
+type Assignment map[Variable]int8
 
 type Inference struct {
 	variable     Variable
-	domain_value int
+	domain_value int8
 }
 
-func (csp CSP) BacktrackingSearch(ac3 bool, forwardChecking bool, mrv bool, lcv bool) Assignment {
-	start := time.Now()
+func (csp CSP) BacktrackingSearch(ac3 bool, forwardChecking bool, mrv bool, lcv bool, time_limit time.Duration) (Assignment, int) {
 	if ac3 {
 		csp.AC3()
 	}
-	var res Assignment = csp.Backtrack(make(Assignment), forwardChecking, mrv, lcv)
-	duration := time.Since(start)
-	fmt.Println("Backtracking search:", duration.Milliseconds(), "(ms)")
-	return res
+	var res Assignment
+	var rec_calls int
+	res, rec_calls = csp.Backtrack(make(Assignment), forwardChecking, mrv, lcv, time_limit, 0)
+
+	return res, rec_calls
 }
 
-func (csp CSP) Backtrack(assgn Assignment, forwardChecking bool, mrv bool, lcv bool) Assignment {
+func (csp CSP) Backtrack(assgn Assignment, forwardChecking bool, mrv bool, lcv bool, time_limit time.Duration, rec_calls int) (Assignment, int) {
+	if time_limit <= 0 {
+		return nil, rec_calls
+	}
+	start := time.Now()
 	if csp.isComplete(assgn) {
-		return assgn
+		return assgn, rec_calls
 	}
 
 	var v Variable = csp.selectUnassignedVariable(assgn, mrv)
@@ -35,32 +38,31 @@ func (csp CSP) Backtrack(assgn Assignment, forwardChecking bool, mrv bool, lcv b
 			if forwardChecking {
 				var inferences []Inference = csp.forwardCheck(v, assgn)
 				csp.addInferences(inferences)
-				result := csp.Backtrack(assgn, forwardChecking, mrv, lcv)
+
+				result, rec_calls := csp.Backtrack(assgn, forwardChecking, mrv, lcv, time_limit-time.Since(start), rec_calls+1)
 				if result != nil {
-					return result
+					return result, rec_calls
 				}
 				csp.removeInferences(inferences)
 			} else {
-				result := csp.Backtrack(assgn, forwardChecking, mrv, lcv)
+				result, rec_calls := csp.Backtrack(assgn, forwardChecking, mrv, lcv, time_limit-time.Since(start), rec_calls+1)
 				if result != nil {
-					return result
+					return result, rec_calls
 				}
 			}
 		}
 		delete(assgn, v)
 	}
 
-	return nil
+	return nil, rec_calls
 }
 
+/**
+ * Checks that every variable holds a value
+ **/
 func (csp CSP) isComplete(assgn Assignment) bool {
-	// all variables have a value that is in their domain
-	for var_id, variable := range csp.domains {
-		if value, ok := assgn[var_id]; ok {
-			if false && !variable.Contains(value) {
-				return false
-			}
-		} else {
+	for _, variable := range csp.variables {
+		if _, ok := assgn[variable]; !ok {
 			return false
 		}
 	}
@@ -68,6 +70,10 @@ func (csp CSP) isComplete(assgn Assignment) bool {
 	return true
 }
 
+/**
+ * Selects a variable that is unassigned.
+ * If mrv it will chose the variable with the minimum remaining values
+ **/
 func (csp CSP) selectUnassignedVariable(assgn Assignment, mrv bool) Variable {
 	if mrv {
 		var min_values int
@@ -99,10 +105,15 @@ func (csp CSP) selectUnassignedVariable(assgn Assignment, mrv bool) Variable {
 	}
 }
 
+/**
+ * Returns the domain of a variable. If lcv the domain values will be ordered from
+ * small to large of how many domains the variable assignment would affect
+ **/
 func (csp CSP) orderDomainValues(assgn Assignment, v Variable, lcv bool) Domain {
-	if !lcv {
+	if !lcv { // if we are not doing lcv just return the domain
 		return csp.domains[v]
 	}
+
 	var domain Domain = csp.domains[v]
 	var num_constraints = make([]int, len(domain))
 	for i, val := range domain {
@@ -113,6 +124,7 @@ func (csp CSP) orderDomainValues(assgn Assignment, v Variable, lcv bool) Domain 
 		}
 	}
 
+	// sort the domain
 	for i := 0; i < len(domain); i++ {
 		for j := i + 1; j < len(domain); j++ {
 			if num_constraints[j] < num_constraints[i] {
@@ -143,22 +155,21 @@ func (csp CSP) isConsistent(v Variable, assgn Assignment) bool {
 				}
 
 			case SUM:
-				var sum int = 0
-				var num_unassigned int = 0
+				var sum int8 = 0
+				var num_unassigned int8 = 0
 
 				for _, cons_var := range c.constrained {
 					assigned_value, isAssigned := assgn[cons_var]
 
 					if isAssigned {
 						sum += assigned_value
-						// if sum > c.sum {
-						// 	return false
-						// }
 					} else {
 						num_unassigned++
 					}
 				}
 
+				// takes advantage that cages cannot contain duplicates. thus if some variables havent been assigned,
+				// it can calculate the minimum possible value of them and subtract from the constraint sum before checking against total sum
 				if (num_unassigned == 0 && sum != c.sum) || sum > c.sum-min_sum(num_unassigned) {
 					return false
 				}
@@ -170,7 +181,7 @@ func (csp CSP) isConsistent(v Variable, assgn Assignment) bool {
 }
 
 /**
- * Evaluate domain values that could be removed and return them
+ * Evaluate domain values that could be removed based on a variable getting assigned and return the changes as an inference
  **/
 func (csp CSP) forwardCheck(v Variable, assgn Assignment) []Inference {
 	var inferences = []Inference{}
@@ -210,7 +221,7 @@ func (csp CSP) removeInferences(inferences []Inference) {
  * Returns value of n(n+1)/2 for n 0-9 and otherwise calculates n(n+1)/2
  * used to prove the inconsistency of sum constraints which have unassigned variables
  */
-func min_sum(n int) int {
+func min_sum(n int8) int8 {
 	switch n {
 	case 0:
 		return 0

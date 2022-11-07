@@ -3,19 +3,21 @@ package sudoku
 import (
 	"Sudoku-CSP/csp"
 	"fmt"
+	"strconv"
+	"strings"
 )
 
-const BOX_SIZE int = 3
-const SIZE int = BOX_SIZE * BOX_SIZE
+const BOX_SIZE int8 = 3
+const SIZE int8 = BOX_SIZE * BOX_SIZE
 
 type Sudoku struct {
-	arr [SIZE][SIZE]int
+	arr [SIZE][SIZE]int8
 }
 
-type Coord struct{ row, col int }
+type Coord struct{ row, col int8 }
 
 // Returns a sudoku board with the specified assignments
-func NewSudoku(arr [][]int) Sudoku {
+func NewSudoku(arr [][]int8) Sudoku {
 	var s = Sudoku{} // all values are 0
 
 	if arr == nil {
@@ -29,7 +31,7 @@ func NewSudoku(arr [][]int) Sudoku {
 		}
 
 		for j, e2 := range e1 {
-			if i >= SIZE || j >= SIZE { // ignore values in array past 9 elements
+			if int8(i) >= SIZE || int8(j) >= SIZE { // ignore values in array past 9 elements
 				continue
 			}
 
@@ -44,11 +46,11 @@ func NewSudoku(arr [][]int) Sudoku {
 	return s
 }
 
-func NewSudokuFromAssignment(assignments map[int]int) Sudoku {
-	var ctr int = 0
+func NewSudokuFromAssignment(assignments map[int8]int8) Sudoku {
+	var ctr int8 = 0
 	var s = Sudoku{}
-	for i := 0; i < SIZE; i++ {
-		for j := 0; j < SIZE; j++ {
+	for i := int8(0); i < SIZE; i++ {
+		for j := int8(0); j < SIZE; j++ {
 			s.arr[i][j] = assignments[ctr]
 			ctr++
 		}
@@ -56,8 +58,25 @@ func NewSudokuFromAssignment(assignments map[int]int) Sudoku {
 	return s
 }
 
+func NewSudokuFromString(str string) Sudoku {
+	str = strings.Trim(str, " \t\n")
+	var ctr int = 0
+	var s = NewSudoku([][]int8{})
+	for i, row := range s.arr {
+		for j := range row {
+			intVal, err := strconv.Atoi(str[ctr : ctr+1])
+			if err != nil || intVal < 0 || intVal > 9 {
+				s.arr[i][j] = 0
+			}
+			s.arr[i][j] = int8(intVal)
+			ctr++
+		}
+	}
+	return s
+}
+
 func NewSudokuVariable() csp.Domain {
-	return csp.NewDomain([]int{1, 2, 3, 4, 5, 6, 7, 8, 9})
+	return csp.NewDomain([]int8{1, 2, 3, 4, 5, 6, 7, 8, 9})
 }
 
 /**
@@ -68,47 +87,47 @@ func (s Sudoku) ToCSP() csp.CSP {
 	return csp
 }
 
-func (s Sudoku) ToCSPWithIds() (csp.CSP, map[Coord]int) {
+func (s Sudoku) ToCSPWithIds() (csp.CSP, map[Coord]int8) {
 	var csp csp.CSP = csp.NewCSP()
 
-	var id int = 0
-	var id_mapping = make(map[Coord]int)
+	var id int8 = 0
+	var id_mapping = make(map[Coord]int8)
 
 	for i, row := range s.arr {
 		for j, e := range row {
-			id_mapping[Coord{i, j}] = id
+			id_mapping[Coord{int8(i), int8(j)}] = id
 			if e == 0 || (e < 0 || e > 9) {
-				csp.Insert(id, []int{1, 2, 3, 4, 5, 6, 7, 8, 9})
+				csp.Insert(id, []int8{1, 2, 3, 4, 5, 6, 7, 8, 9})
 			} else {
-				csp.Insert(id, []int{e})
+				csp.Insert(id, []int8{e})
 			}
 			id++
 		}
 	}
 
-	var constrained [9]int
-	for i := 0; i < SIZE; i++ {
+	var constrained [9]int8
+	for i := int8(0); i < SIZE; i++ {
 
 		// row constraints
 		for j := range constrained {
-			constrained[j] = id_mapping[Coord{i, j}]
+			constrained[j] = id_mapping[Coord{i, int8(j)}]
 		}
 
 		csp.Constrain(constrained[:]...)
-		// csp.ConstrainSum(45, constrained[:]...)
+		csp.ConstrainSum(45, constrained[:]...)
 
 		// column constraints
 		for j := range constrained {
-			constrained[j] = id_mapping[Coord{j, i}]
+			constrained[j] = id_mapping[Coord{int8(j), i}]
 		}
 
 		csp.Constrain(constrained[:]...)
-		// csp.ConstrainSum(45, constrained[:]...)
+		csp.ConstrainSum(45, constrained[:]...)
 	}
 
 	// box constraints
-	for i := 0; i < BOX_SIZE*BOX_SIZE; i += BOX_SIZE {
-		for j := 0; j < BOX_SIZE*BOX_SIZE; j += BOX_SIZE {
+	for i := int8(0); i < BOX_SIZE*BOX_SIZE; i += BOX_SIZE {
+		for j := int8(0); j < BOX_SIZE*BOX_SIZE; j += BOX_SIZE {
 			constrained[0] = id_mapping[Coord{i, j}] // im not proud of this
 			constrained[1] = id_mapping[Coord{i, j + 1}]
 			constrained[2] = id_mapping[Coord{i, j + 2}]
@@ -120,7 +139,7 @@ func (s Sudoku) ToCSPWithIds() (csp.CSP, map[Coord]int) {
 			constrained[8] = id_mapping[Coord{i + 2, j + 2}]
 
 			csp.Constrain(constrained[:]...)
-			// csp.ConstrainSum(45, constrained[:]...)
+			csp.ConstrainSum(45, constrained[:]...)
 		}
 	}
 
@@ -143,10 +162,10 @@ func (s Sudoku) Print() {
 	}
 }
 
-func initialDomain(value int) []int {
+func initialDomain(value int8) []int8 {
 	if value >= 1 && value <= 9 {
-		return []int{value}
+		return []int8{value}
 	} else {
-		return []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
+		return []int8{1, 2, 3, 4, 5, 6, 7, 8, 9}
 	}
 }

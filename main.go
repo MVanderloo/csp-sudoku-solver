@@ -1,101 +1,88 @@
 package main
 
 import (
-	"Sudoku-CSP/sudoku"
+	. "Sudoku-CSP/csp"
+	. "Sudoku-CSP/sudoku"
+	"Sudoku-CSP/util"
 	"fmt"
+	"log"
+	"os"
+	"time"
 )
 
-func main() {
-	var s sudoku.Sudoku = sudoku.NewSudoku([][]int{
-		{0, 0, 0, 6, 0, 0, 4, 0, 0},
-		{7, 0, 0, 0, 0, 3, 6, 0, 0},
-		{0, 0, 0, 0, 9, 1, 0, 8},
-		nil,
-		{0, 5, 0, 1, 8, 0, 0, 0, 3},
-		{0, 0, 0, 3, 0, 6, 0, 4, 5},
-		{0, 4, 0, 2, 0, 0, 0, 6, 0},
-		{9, 0, 3},
-		{0, 2, 0, 0, 0, 0, 1},
-	})
+const config_file string = "config.json"
 
-	// var s sudoku.Sudoku = sudoku.NewSudoku([][]int{
-	// 	{5, 8, 1, 6, 7, 2, 4, 3, 9},
-	// 	{7, 0, 0, 0, 0, 3, 6, 0, 0},
-	// 	{0, 0, 0, 0, 9, 1, 0, 8},
-	// 	{4},
-	// 	{0, 5, 0, 1, 8, 0, 0, 0, 3},
-	// 	{0, 0, 0, 3, 0, 6, 0, 4, 5},
-	// 	{0, 4, 0, 2, 0, 0, 0, 6, 0},
-	// 	{9, 0, 3},
-	// 	{0, 2, 0, 0, 0, 0, 1},
-	// })
+var config Config
+var ksConfig KillerSudokuConfig
+var logger log.Logger
+var logfile *os.File
+var sudoku_strs []string
+var overlap_strs []string
 
-	// var s sudoku.Sudoku = sudoku.NewSudoku([][]int{
-	// 	{4, 0, 0, 0, 0, 0, 8, 0, 5},
-	// 	{0, 3, 0, 0, 0, 0, 0, 0, 0},
-	// 	{0, 0, 0, 7, 0, 0, 0, 0, 0},
-	// 	{0, 2, 0, 0, 0, 0, 0, 6, 0},
-	// 	{0, 0, 0, 0, 8, 0, 4, 0, 0},
-	// 	{0, 0, 0, 0, 1, 0, 0, 0, 0},
-	// 	{0, 0, 0, 6, 0, 3, 0, 7, 0},
-	// 	{5, 0, 0, 2, 0, 0, 0, 0, 0},
-	// 	{1, 0, 4, 0, 0, 0, 0, 0, 0},
-	// })
-
-	// s.Print()
-
-	// // var csp1 = s.ToCSP()
-	// // csp1.AC3()
-	// // sudoku.NewSudokuFromAssignment(csp1.BacktrackingSearch(true, false, false)).Print()
-
-	// var csp1 = s.ToCSP()
-	// csp1.Print()
-	// csp1.AC3()
-	// sudoku.NewSudokuFromAssignment(csp1.BacktrackingSearch(true, true, true, true)).Print()
-
-	// var s sudoku.OverlapSudoku = sudoku.NewOverlapSudoku(sudoku.NewSudoku(nil), sudoku.NewSudoku(nil), sudoku.NewSudoku(nil))
-
-	// var s sudoku.KillerSudoku = sudoku.NewKillerSudoku([][]int{
-	// 	{0, 2, 0, 6, 0, 8, 0, 0, 0},
-	// 	{5, 8, 0, 0, 0, 9, 7, 0, 0},
-	// 	{0, 0, 0, 0, 4, 0, 0, 0, 0},
-
-	// 	{9, 7, 0, 0, 0, 0, 5, 0, 0},
-	// 	{6, 0, 0, 0, 0, 0, 0, 0, 4},
-	// 	{0, 0, 8, 0, 0, 0, 0, 1, 3},
-
-	// 	{0, 0, 0, 0, 2, 0, 0, 0, 0},
-	// 	{0, 0, 9, 8, 0, 0, 0, 3, 6},
-	// 	{0, 0, 0, 3, 0, 6, 0, 9, 0},
-	// }, []sudoku.Cage{
-	// 	sudoku.NewCage(12, [][2]int{
-	// 		{0, 0},
-	// 		{0, 1},
-	// 		{0, 2},
-	// 	}),
-	// })
-
-	csp1 := s.ToCSP()
-	assignment := csp1.BacktrackingSearch(true, true, true, true)
-	fmt.Println(assignment)
-	fmt.Println(csp1.IsSatisfied(assignment))
-
-	// for _, p1 := range [2]bool{true, false} {
-	// 	for _, p2 := range [2]bool{true, false} {
-	// 		for _, p3 := range [2]bool{true, false} {
-	// 			for _, p4 := range [2]bool{true, false} {
-	// 				csp1 := s.ToCSP()
-	// 				fmt.Println("ac3:", p1, "forward checking:", p2, "mrv:", p3, "lcv:", p4)
-	// 				assignment := csp1.BacktrackingSearch(p1, p2, p3, p4)
-	// 				if !csp1.IsSatisfied(assignment) {
-	// 					sudoku.NewSudokuFromAssignment(assignment).Print()
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// }
+func init() {
+	config = ReadConfig(config_file)
+	ksConfig = ReadKillerSudokuConfig(config.Input_files.Directory + config.Input_files.Killer_sudoku)
+	sudoku_strs = util.GetFileLines(util.OpenFileRead(config.Input_files.Directory + config.Input_files.Sudoku))
+	overlap_strs = util.GetFileLines(util.OpenFileRead(config.Input_files.Directory + config.Input_files.Overlap_sudoku))
 }
 
-func readPuzzle(puzzle_type int, index int) {
+func main() {
+	logfile = util.OpenLogFile(config.Log_file)
+	defer logfile.Close()
+	logger.SetOutput(logfile)
+	logger.Println(time.Now().Format("15:04:05 02/01/06"))
+	logger.Println("Time limit:", config.Time_limit, "(ms)")
+	logger.Print(util.LogFileSpacer())
 
+	var csp CSP
+
+	for _, input := range config.Inputs {
+	puzzleIdLoop:
+		for _, puzzle_id := range input.Presets {
+			for _, ac3 := range input.Ac3 {
+				for _, forward_checking := range input.Forward_checking {
+					for _, mrv := range input.Mrv_heuristic {
+						for _, lcv := range input.Lcv_heuristic {
+							switch input.Type {
+							case 1:
+								if puzzle_id > len(sudoku_strs) {
+									continue puzzleIdLoop
+								}
+								csp = NewSudokuFromString(sudoku_strs[puzzle_id-1]).ToCSP()
+							case 2:
+								if puzzle_id > len(overlap_strs) {
+									continue puzzleIdLoop
+								}
+								csp = NewOverlapSudokuFromString(overlap_strs[puzzle_id-1]).ToCSP()
+							case 3:
+								if puzzle_id > len(ksConfig.Inputs) {
+									continue puzzleIdLoop
+								}
+								var cages []Cage
+								for _, cage := range ksConfig.Inputs[puzzle_id-1].Cages {
+									cages = append(cages, NewCage(cage.Sum, cage.Coords))
+								}
+								csp = NewKillerSudokuFromString(ksConfig.Inputs[puzzle_id-1].Sudoku, cages).ToCSP()
+							default:
+								fmt.Println("Invalid puzzle type:", input.Type)
+							}
+							logger.Println("type:", input.Type, "\npuzzle_id:", puzzle_id, "\ntime limit:", config.Time_limit, "\nac3:", ac3, "\nforward checking:", forward_checking, "\nmrv:", mrv, "\nlcv:", lcv)
+							start := time.Now()
+							assignment, rec_calls := csp.BacktrackingSearch(ac3, forward_checking, mrv, lcv, time.Duration(config.Time_limit*1e9))
+							duration := time.Since(start)
+							logger.Println("Backtracking duration:", duration.Milliseconds(), "(ms)")
+							logger.Println("Recursive calls:", rec_calls)
+							if csp.IsSatisfied(assignment) {
+								logger.Println("Success")
+							} else {
+								logger.Println("No solution found")
+							}
+							logger.Println(assignment)
+							logger.Print(util.LogFileSpacer())
+						}
+					}
+				}
+			}
+		}
+	}
 }
