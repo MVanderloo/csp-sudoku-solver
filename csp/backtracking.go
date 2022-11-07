@@ -23,40 +23,40 @@ func (csp CSP) BacktrackingSearch(ac3 bool, forwardChecking bool, mrv bool, lcv 
 	return res
 }
 
-func (csp CSP) Backtrack(assignment Assignment, forwardChecking bool, mrv bool, lcv bool) Assignment {
-	if csp.isComplete(assignment) {
-		return assignment
+func (csp CSP) Backtrack(assgn Assignment, forwardChecking bool, mrv bool, lcv bool) Assignment {
+	if csp.isComplete(assgn) {
+		return assgn
 	}
 
-	var variable = csp.selectUnassignedVariable(assignment, mrv)
-	for _, value := range csp.orderDomainValues(assignment, variable, lcv) {
-		assignment[variable] = value
-		if csp.isConsistent(variable, assignment) {
+	var v Variable = csp.selectUnassignedVariable(assgn, mrv)
+	for _, value := range csp.orderDomainValues(assgn, v, lcv) {
+		assgn[v] = value
+		if csp.isConsistent(v, assgn) {
 			if forwardChecking {
-				var inferences []Inference = csp.forwardCheck(variable, assignment)
+				var inferences []Inference = csp.forwardCheck(v, assgn)
 				csp.addInferences(inferences)
-				result := csp.Backtrack(assignment, forwardChecking, mrv, lcv)
+				result := csp.Backtrack(assgn, forwardChecking, mrv, lcv)
 				if result != nil {
 					return result
 				}
 				csp.removeInferences(inferences)
 			} else {
-				result := csp.Backtrack(assignment, forwardChecking, mrv, lcv)
+				result := csp.Backtrack(assgn, forwardChecking, mrv, lcv)
 				if result != nil {
 					return result
 				}
 			}
 		}
-		delete(assignment, variable)
+		delete(assgn, v)
 	}
 
 	return nil
 }
 
-func (csp CSP) isComplete(assignment Assignment) bool {
+func (csp CSP) isComplete(assgn Assignment) bool {
 	// all variables have a value that is in their domain
 	for var_id, variable := range csp.domains {
-		if value, ok := assignment[var_id]; ok {
+		if value, ok := assgn[var_id]; ok {
 			if false && !variable.Contains(value) {
 				return false
 			}
@@ -65,22 +65,15 @@ func (csp CSP) isComplete(assignment Assignment) bool {
 		}
 	}
 
-	//all constraints are satisifed
-	// for _, constraint := range csp.constraints {
-	// 	if !constraint.isSatisfied(assignment) {
-	// 		return false
-	// 	}
-	// }
-
 	return true
 }
 
-func (csp CSP) selectUnassignedVariable(assignment Assignment, mrv bool) Variable {
+func (csp CSP) selectUnassignedVariable(assgn Assignment, mrv bool) Variable {
 	if mrv {
 		var min_values int
 		var min_var Variable = -1
 		for _, variable := range csp.variables {
-			if _, ok := assignment[variable]; !ok {
+			if _, ok := assgn[variable]; !ok {
 				if min_var == -1 {
 					min_values = len(csp.domains[variable])
 					min_var = variable
@@ -98,7 +91,7 @@ func (csp CSP) selectUnassignedVariable(assignment Assignment, mrv bool) Variabl
 		return min_var
 	} else {
 		for variable := range csp.domains {
-			if _, ok := assignment[variable]; !ok {
+			if _, ok := assgn[variable]; !ok {
 				return variable
 			}
 		}
@@ -106,15 +99,15 @@ func (csp CSP) selectUnassignedVariable(assignment Assignment, mrv bool) Variabl
 	}
 }
 
-func (csp CSP) orderDomainValues(assignment Assignment, variable Variable, lcv bool) Domain {
+func (csp CSP) orderDomainValues(assgn Assignment, v Variable, lcv bool) Domain {
 	if !lcv {
-		return csp.domains[variable]
+		return csp.domains[v]
 	}
-	var domain Domain = csp.domains[variable]
+	var domain Domain = csp.domains[v]
 	var num_constraints = make([]int, len(domain))
 	for i, val := range domain {
-		for _, neighbor := range csp.getNeighbors(variable) {
-			if _, ok := assignment[neighbor]; !ok && csp.domains[neighbor].Contains(val) {
+		for _, neighbor := range csp.getNeighbors(v) {
+			if _, ok := assgn[neighbor]; !ok && csp.domains[neighbor].Contains(val) {
 				num_constraints[i] = num_constraints[i] + 1
 			}
 		}
@@ -137,14 +130,14 @@ func (csp CSP) orderDomainValues(assignment Assignment, variable Variable, lcv b
  * Checks that none of the constraints have been violated by the assignment of a variable
  * Only checks constraints relating to that variable
  **/
-func (csp CSP) isConsistent(variable Variable, assignment Assignment) bool {
+func (csp CSP) isConsistent(v Variable, assgn Assignment) bool {
 	for _, c := range csp.constraints {
-		if c.constrains(variable) {
+		if c.constrains(v) {
 			switch c.getType() {
 			case NOT_EQUALS:
 				for _, cons_var := range c.constrained {
-					assigned_value, isAssigned := assignment[cons_var]
-					if cons_var != variable && isAssigned && assigned_value == assignment[variable] {
+					assigned_value, isAssigned := assgn[cons_var]
+					if cons_var != v && isAssigned && assigned_value == assgn[v] {
 						return false
 					}
 				}
@@ -154,13 +147,13 @@ func (csp CSP) isConsistent(variable Variable, assignment Assignment) bool {
 				var num_unassigned int = 0
 
 				for _, cons_var := range c.constrained {
-					assigned_value, isAssigned := assignment[cons_var]
+					assigned_value, isAssigned := assgn[cons_var]
 
 					if isAssigned {
 						sum += assigned_value
-						if sum > c.sum {
-							return false
-						}
+						// if sum > c.sum {
+						// 	return false
+						// }
 					} else {
 						num_unassigned++
 					}
@@ -179,27 +172,27 @@ func (csp CSP) isConsistent(variable Variable, assignment Assignment) bool {
 /**
  * Evaluate domain values that could be removed and return them
  **/
-func (csp CSP) forwardCheck(variable Variable, assignment Assignment) []Inference {
+func (csp CSP) forwardCheck(v Variable, assgn Assignment) []Inference {
 	var inferences = []Inference{}
 
-	for _, neighbor := range csp.getNeighbors(variable) {
-		if csp.domains[neighbor].Contains(assignment[variable]) {
+	for _, neighbor := range csp.getNeighbors(v) {
+		if csp.domains[neighbor].Contains(assgn[v]) {
 			inferences = append(inferences, Inference{
 				variable:     neighbor,
-				domain_value: assignment[variable],
+				domain_value: assgn[v],
 			})
 		}
 	}
 
-	return inferences[:]
+	return inferences
 }
 
 /**
  * Take the list of Inferences and apply to the CSP
  */
 func (csp CSP) addInferences(inferences []Inference) {
-	for _, inference := range inferences {
-		csp.removeFromDomain(inference.variable, inference.domain_value)
+	for _, infer := range inferences {
+		csp.removeFromDomain(infer.variable, infer.domain_value)
 	}
 }
 
@@ -207,8 +200,8 @@ func (csp CSP) addInferences(inferences []Inference) {
  * Take the list of Inferences and remove from the CSP
  */
 func (csp CSP) removeInferences(inferences []Inference) {
-	for _, inference := range inferences {
-		csp.addToDomain(inference.variable, inference.domain_value)
+	for _, infer := range inferences {
+		csp.addToDomain(infer.variable, infer.domain_value)
 	}
 }
 
