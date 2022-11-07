@@ -22,11 +22,11 @@ func NewCSP() CSP {
 /**
  * Inserts a variable with a domain into the CSP
  */
-func (csp *CSP) Insert(variable int, domain Domain) {
-	if !util.Contains(csp.variables, Variable(variable)) {
-		csp.variables = append(csp.variables, Variable(variable))
+func (csp *CSP) Insert(v int, domain Domain) {
+	if !util.Contains(csp.variables, Variable(v)) {
+		csp.variables = append(csp.variables, Variable(v))
 	}
-	csp.domains[Variable(variable)] = NewDomain(domain)
+	csp.domains[Variable(v)] = NewDomain(domain)
 }
 
 /**
@@ -43,27 +43,30 @@ func (csp *CSP) ConstrainSum(sum int, vars ...int) {
 	csp.constraints = append(csp.constraints, NewSumConstraint(sum, vars...))
 }
 
-func (csp CSP) removeFromDomain(variable Variable, value int) {
-	csp.domains[variable] = csp.domains[variable].Remove(value)
-}
-
-func (csp CSP) addToDomain(variable Variable, value int) {
-	csp.domains[variable] = csp.domains[variable].Add(value)
-}
-
+/**
+ * Prints the CSP
+ **/
 func (csp CSP) Print() {
-	fmt.Printf("variables(%v): %v\nconstraints(%v): %v\n", len(csp.domains), csp.domains, len(csp.constraints), csp.constraints)
+	fmt.Printf("variables(%v): %v\nconstraints(%v): %v\n", len(csp.variables), csp.domains, len(csp.constraints), csp.constraints)
+}
+
+func (csp CSP) removeFromDomain(v Variable, value int) {
+	csp.domains[v] = csp.domains[v].Remove(value)
+}
+
+func (csp CSP) addToDomain(v Variable, value int) {
+	csp.domains[v] = csp.domains[v].Add(value)
 }
 
 /**
  * Returns the set of all variables that share a constraint with the input variable within the CSP
  */
-func (csp CSP) getNeighbors(variable Variable) []Variable {
+func (csp CSP) getNeighbors(v Variable) []Variable {
 	var neighbors = []Variable{}
 	for _, constraint := range csp.constraints { // for each constraint
-		if constraint.constrains(variable) { // if the variable is included
+		if constraint.constrains(v) { // if the variable is included
 			for _, neighbor := range constraint.constrained { // for each neighbor in the constraint
-				if variable != neighbor && !util.Contains(neighbors, neighbor) { // if neighbors does not contain the variable
+				if v != neighbor && !util.Contains(neighbors, neighbor) { // if neighbors does not contain the variable
 					neighbors = append(neighbors, neighbor) // append variable to neighbors
 				}
 			}
@@ -72,8 +75,8 @@ func (csp CSP) getNeighbors(variable Variable) []Variable {
 	return neighbors
 }
 
-func (csp CSP) GetVar(variable Variable) Domain {
-	return csp.domains[variable]
+func (csp CSP) GetDomain(v Variable) Domain {
+	return csp.domains[v]
 }
 
 func (csp CSP) GetVars() map[Variable]Domain {
