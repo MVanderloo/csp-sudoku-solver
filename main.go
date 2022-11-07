@@ -95,3 +95,7 @@ func main() {
 	// 	}
 	// }
 }
+
+func readPuzzle(puzzle_type int, index int) {
+
+}
