@@ -52,37 +52,37 @@ func (os OverlapSudoku) ToCSP() csp.CSP {
 	csp2, id_mapping2 := os.boards[2].ToCSPWithIds()
 
 	for _, variable := range csp1.GetVariables() {
-		coord, _ := util.FindKey(id_mapping1, int8(variable))
+		coord, _ := util.FindKey(id_mapping1, int(variable))
 
 		if coord.row >= 6 || coord.col >= 6 {
-			id_mapping[Coord{coord.row + 3, coord.col + 3}] = int8(len(csp.GetVariables()))
-			csp.Insert(int8(len(csp.GetVariables())), initialDomain(os.boards[1].arr[coord.row][coord.col]))
+			id_mapping[Coord{row: coord.row + 3, col: coord.col + 3}] = int(len(csp.GetVariables()))
+			csp.Insert(int(len(csp.GetVariables())), initialDomain(os.boards[1].arr[coord.row][coord.col]))
 		}
 	}
 
 	for _, constraint := range csp1.GetConstraints() {
-		var cons_vars = []int8{}
+		var cons_vars = []int{}
 		for _, variable := range constraint.GetConstrained() {
-			coord, _ := util.FindKey(id_mapping1, int8(variable))
-			cons_vars = append(cons_vars, id_mapping[Coord{coord.row + 3, coord.col + 3}])
+			coord, _ := util.FindKey(id_mapping1, int(variable))
+			cons_vars = append(cons_vars, id_mapping[Coord{row: coord.row + 3, col: coord.col + 3}])
 		}
 		csp.Constrain(cons_vars...)
 	}
 
 	for variable := range csp2.GetVariables() {
-		coord, _ := util.FindKey(id_mapping2, int8(variable))
+		coord, _ := util.FindKey(id_mapping2, int(variable))
 
 		if coord.row >= 6 || coord.col >= 6 {
-			id_mapping[Coord{coord.row + 6, coord.col + 6}] = int8(len(csp.GetVariables()))
-			csp.Insert(int8(len(csp.GetVariables())), initialDomain(os.boards[2].arr[coord.row][coord.col]))
+			id_mapping[Coord{row: coord.row + 6, col: coord.col + 6}] = int(len(csp.GetVariables()))
+			csp.Insert(int(len(csp.GetVariables())), initialDomain(os.boards[2].arr[coord.row][coord.col]))
 		}
 	}
 
 	for _, constraint := range csp2.GetConstraints() {
-		var cons_vars = []int8{}
+		var cons_vars = []int{}
 		for _, variable := range constraint.GetConstrained() {
-			coord, _ := util.FindKey(id_mapping2, int8(variable))
-			cons_vars = append(cons_vars, id_mapping[Coord{coord.row + 6, coord.col + 6}])
+			coord, _ := util.FindKey(id_mapping2, int(variable))
+			cons_vars = append(cons_vars, id_mapping[Coord{row: coord.row + 6, col: coord.col + 6}])
 		}
 		csp.Constrain(cons_vars...)
 	}

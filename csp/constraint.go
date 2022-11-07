@@ -4,10 +4,10 @@ import "Sudoku-CSP/util"
 
 type Constraint struct {
 	constrained []Variable
-	sum         int8
+	sum         int
 }
 
-type Constraint_t int8
+type Constraint_t int
 
 const (
 	NOT_EQUALS Constraint_t = iota
@@ -22,7 +22,7 @@ func (c Constraint) getType() Constraint_t {
 	}
 }
 
-func NewNotEqualsConstraint(vars ...int8) Constraint {
+func NewNotEqualsConstraint(vars ...int) Constraint {
 	var constrained = []Variable{}
 	for _, variable := range vars {
 		if !util.Contains(constrained, Variable(variable)) {
@@ -35,7 +35,7 @@ func NewNotEqualsConstraint(vars ...int8) Constraint {
 	}
 }
 
-func NewSumConstraint(sum int8, vars ...int8) Constraint {
+func NewSumConstraint(sum int, vars ...int) Constraint {
 	var constrained = []Variable{}
 	for _, variable := range vars {
 		if !util.Contains(constrained, Variable(variable)) {

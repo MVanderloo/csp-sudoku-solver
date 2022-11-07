@@ -68,7 +68,7 @@ func main() {
 							}
 							logger.Println("type:", input.Type, "\npuzzle_id:", puzzle_id, "\ntime limit:", config.Time_limit, "\nac3:", ac3, "\nforward checking:", forward_checking, "\nmrv:", mrv, "\nlcv:", lcv)
 							start := time.Now()
-							assignment, rec_calls := csp.BacktrackingSearch(ac3, forward_checking, mrv, lcv, time.Duration(config.Time_limit*1e9))
+							assignment, rec_calls := csp.BacktrackingSearch(ac3, forward_checking, mrv, lcv, time.Duration(config.Time_limit*1e12))
 							duration := time.Since(start)
 							logger.Println("Backtracking duration:", duration.Milliseconds(), "(ms)")
 							logger.Println("Recursive calls:", rec_calls)

@@ -61,8 +61,8 @@ type KillerSudokuConfig struct {
 	Inputs []struct {
 		Sudoku string `json:"sudoku"`
 		Cages  []struct {
-			Sum    int8      `json:"sum"`
-			Coords [][2]int8 `json:"coords"`
+			Sum    int      `json:"sum"`
+			Coords [][2]int `json:"coords"`
 		} `json:"cages"`
 	} `json:"inputs"`
 }

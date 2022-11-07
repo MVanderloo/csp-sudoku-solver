@@ -4,11 +4,11 @@ import (
 	"time"
 )
 
-type Assignment map[Variable]int8
+type Assignment map[Variable]int
 
 type Inference struct {
 	variable     Variable
-	domain_value int8
+	domain_value int
 }
 
 func (csp CSP) BacktrackingSearch(ac3 bool, forwardChecking bool, mrv bool, lcv bool, time_limit time.Duration) (Assignment, int) {
@@ -24,8 +24,9 @@ func (csp CSP) BacktrackingSearch(ac3 bool, forwardChecking bool, mrv bool, lcv 
 
 func (csp CSP) Backtrack(assgn Assignment, forwardChecking bool, mrv bool, lcv bool, time_limit time.Duration, rec_calls int) (Assignment, int) {
 	if time_limit <= 0 {
-		return nil, rec_calls
+		return assgn, rec_calls
 	}
+
 	start := time.Now()
 	if csp.isComplete(assgn) {
 		return assgn, rec_calls
@@ -39,13 +40,15 @@ func (csp CSP) Backtrack(assgn Assignment, forwardChecking bool, mrv bool, lcv b
 				var inferences []Inference = csp.forwardCheck(v, assgn)
 				csp.addInferences(inferences)
 
-				result, rec_calls := csp.Backtrack(assgn, forwardChecking, mrv, lcv, time_limit-time.Since(start), rec_calls+1)
+				result, calls := csp.Backtrack(assgn, forwardChecking, mrv, lcv, time_limit-time.Since(start), 1)
+				rec_calls += calls
 				if result != nil {
 					return result, rec_calls
 				}
 				csp.removeInferences(inferences)
 			} else {
-				result, rec_calls := csp.Backtrack(assgn, forwardChecking, mrv, lcv, time_limit-time.Since(start), rec_calls+1)
+				result, calls := csp.Backtrack(assgn, forwardChecking, mrv, lcv, time_limit-time.Since(start), 1)
+				rec_calls += calls
 				if result != nil {
 					return result, rec_calls
 				}
@@ -155,8 +158,8 @@ func (csp CSP) isConsistent(v Variable, assgn Assignment) bool {
 				}
 
 			case SUM:
-				var sum int8 = 0
-				var num_unassigned int8 = 0
+				var sum int = 0
+				var num_unassigned int = 0
 
 				for _, cons_var := range c.constrained {
 					assigned_value, isAssigned := assgn[cons_var]
@@ -221,7 +224,7 @@ func (csp CSP) removeInferences(inferences []Inference) {
  * Returns value of n(n+1)/2 for n 0-9 and otherwise calculates n(n+1)/2
  * used to prove the inconsistency of sum constraints which have unassigned variables
  */
-func min_sum(n int8) int8 {
+func min_sum(n int) int {
 	switch n {
 	case 0:
 		return 0
