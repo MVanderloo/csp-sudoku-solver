@@ -3,7 +3,7 @@ package csp
 import "Sudoku-CSP/util"
 
 type Constraint struct {
-	constrained []int
+	constrained []Variable
 	sum         int
 }
 
@@ -23,10 +23,10 @@ func (c Constraint) getType() Constraint_t {
 }
 
 func NewNotEqualsConstraint(vars ...int) Constraint {
-	var constrained = []int{}
+	var constrained = []Variable{}
 	for _, variable := range vars {
-		if !util.Contains(constrained, variable) {
-			constrained = append(constrained, variable)
+		if !util.Contains(constrained, Variable(variable)) {
+			constrained = append(constrained, Variable(variable))
 		}
 	}
 	return Constraint{
@@ -36,10 +36,10 @@ func NewNotEqualsConstraint(vars ...int) Constraint {
 }
 
 func NewSumConstraint(sum int, vars ...int) Constraint {
-	var constrained = []int{}
+	var constrained = []Variable{}
 	for _, variable := range vars {
-		if !util.Contains(constrained, variable) {
-			constrained = append(constrained, variable)
+		if !util.Contains(constrained, Variable(variable)) {
+			constrained = append(constrained, Variable(variable))
 		}
 	}
 	return Constraint{
@@ -49,40 +49,17 @@ func NewSumConstraint(sum int, vars ...int) Constraint {
 }
 
 /**
- * Binary constraint holds ids of 2 variables where v1 is constrained by v2
- * All arcs represent a NOT_EQUALS constraint
+ * Returns if the variable is constrained by the constraint
  **/
-type Arc struct {
-	x1 int
-	x2 int
-}
-
-// used for AC-3
-func (c Constraint) toArcs() []Arc {
-	var arcs = []Arc{}
-	switch c.getType() {
-	case SUM:
-		return arcs // not generating arcs for sum constraints
-
-	case NOT_EQUALS:
-		for i, v1 := range c.constrained {
-			for j, v2 := range c.constrained {
-				if i == j {
-					continue
-				}
-
-				arcs = append(arcs, Arc{v1, v2})
-			}
-		}
-		return arcs
-
-	default:
-		return arcs
-	}
-}
-
-func (c Constraint) constrains(variable int) bool {
+func (c Constraint) constrains(variable Variable) bool {
 	return util.Contains(c.constrained, variable)
+}
+
+/**
+ * Returns the set of variables constrained by the constraint
+ **/
+func (c Constraint) GetConstrained() []Variable {
+	return c.constrained
 }
 
 // func (c Constraint) isSatisfied(assignment Assignment) bool {

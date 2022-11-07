@@ -61,3 +61,29 @@ func RemoveLast[T any](arr []T) (T, []T) {
 
 	return arr[idx], arr[:idx]
 }
+
+func FindKey[T1 comparable, T2 comparable](m map[T1]T2, value T2) (key T1, ok bool) {
+	for k, v := range m {
+		if v == value {
+			key = k
+			ok = true
+			return
+		}
+	}
+	return
+}
+
+func MinSlice[T int](arr []T) T {
+	if len(arr) == 0 {
+		panic("")
+	}
+
+	var min T = arr[0]
+	for _, e := range arr {
+		if e < min {
+			min = e
+		}
+	}
+
+	return min
+}

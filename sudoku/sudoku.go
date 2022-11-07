@@ -12,6 +12,8 @@ type Sudoku struct {
 	arr [SIZE][SIZE]int
 }
 
+type Coord struct{ row, col int }
+
 // Returns a sudoku board with the specified assignments
 func NewSudoku(arr [][]int) Sudoku {
 	var s = Sudoku{} // all values are 0
@@ -54,18 +56,27 @@ func NewSudokuFromAssignment(assignments map[int]int) Sudoku {
 	return s
 }
 
+func NewSudokuVariable() csp.Domain {
+	return csp.NewDomain([]int{1, 2, 3, 4, 5, 6, 7, 8, 9})
+}
+
 /**
  * Converts a sudoku into a CSP
  **/
 func (s Sudoku) ToCSP() csp.CSP {
+	csp, _ := s.ToCSPWithIds()
+	return csp
+}
+
+func (s Sudoku) ToCSPWithIds() (csp.CSP, map[Coord]int) {
 	var csp csp.CSP = csp.NewCSP()
-	type coord struct{ row, col int }
+
 	var id int = 0
-	var id_mapping = make(map[coord]int)
+	var id_mapping = make(map[Coord]int)
 
 	for i, row := range s.arr {
 		for j, e := range row {
-			id_mapping[coord{i, j}] = id
+			id_mapping[Coord{i, j}] = id
 			if e == 0 || (e < 0 || e > 9) {
 				csp.Insert(id, []int{1, 2, 3, 4, 5, 6, 7, 8, 9})
 			} else {
@@ -80,37 +91,40 @@ func (s Sudoku) ToCSP() csp.CSP {
 
 		// row constraints
 		for j := range constrained {
-			constrained[j] = id_mapping[coord{i, j}]
+			constrained[j] = id_mapping[Coord{i, j}]
 		}
 
 		csp.Constrain(constrained[:]...)
+		// csp.ConstrainSum(45, constrained[:]...)
 
 		// column constraints
 		for j := range constrained {
-			constrained[j] = id_mapping[coord{j, i}]
+			constrained[j] = id_mapping[Coord{j, i}]
 		}
 
 		csp.Constrain(constrained[:]...)
+		// csp.ConstrainSum(45, constrained[:]...)
 	}
 
 	// box constraints
 	for i := 0; i < BOX_SIZE*BOX_SIZE; i += BOX_SIZE {
 		for j := 0; j < BOX_SIZE*BOX_SIZE; j += BOX_SIZE {
-			constrained[0] = id_mapping[coord{i, j}] // im not proud of this
-			constrained[1] = id_mapping[coord{i, j + 1}]
-			constrained[2] = id_mapping[coord{i, j + 2}]
-			constrained[3] = id_mapping[coord{i + 1, j}]
-			constrained[4] = id_mapping[coord{i + 1, j + 1}]
-			constrained[5] = id_mapping[coord{i + 1, j + 2}]
-			constrained[6] = id_mapping[coord{i + 2, j}]
-			constrained[7] = id_mapping[coord{i + 2, j + 1}]
-			constrained[8] = id_mapping[coord{i + 2, j + 2}]
+			constrained[0] = id_mapping[Coord{i, j}] // im not proud of this
+			constrained[1] = id_mapping[Coord{i, j + 1}]
+			constrained[2] = id_mapping[Coord{i, j + 2}]
+			constrained[3] = id_mapping[Coord{i + 1, j}]
+			constrained[4] = id_mapping[Coord{i + 1, j + 1}]
+			constrained[5] = id_mapping[Coord{i + 1, j + 2}]
+			constrained[6] = id_mapping[Coord{i + 2, j}]
+			constrained[7] = id_mapping[Coord{i + 2, j + 1}]
+			constrained[8] = id_mapping[Coord{i + 2, j + 2}]
 
 			csp.Constrain(constrained[:]...)
+			// csp.ConstrainSum(45, constrained[:]...)
 		}
 	}
 
-	return csp
+	return csp, id_mapping
 }
 
 func (s Sudoku) Print() {
@@ -126,5 +140,13 @@ func (s Sudoku) Print() {
 			fmt.Println()
 		}
 		fmt.Println()
+	}
+}
+
+func initialDomain(value int) []int {
+	if value >= 1 && value <= 9 {
+		return []int{value}
+	} else {
+		return []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
 	}
 }

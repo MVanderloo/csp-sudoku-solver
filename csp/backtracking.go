@@ -5,20 +5,18 @@ import (
 	"time"
 )
 
-type Assignment map[int]int
-
-// func (a Assignment) contains(id int) bool {
-// 	_, ok := a[id]
-// 	return ok
-// }
+type Assignment map[Variable]int
 
 type Inference struct {
-	variable     int
+	variable     Variable
 	domain_value int
 }
 
-func (csp CSP) BacktrackingSearch(forwardChecking bool, mrv bool, lcv bool) Assignment {
+func (csp CSP) BacktrackingSearch(ac3 bool, forwardChecking bool, mrv bool, lcv bool) Assignment {
 	start := time.Now()
+	if ac3 {
+		csp.AC3()
+	}
 	var res Assignment = csp.Backtrack(make(Assignment), forwardChecking, mrv, lcv)
 	duration := time.Since(start)
 	fmt.Println("Backtracking search:", duration.Milliseconds(), "(ms)")
@@ -26,15 +24,12 @@ func (csp CSP) BacktrackingSearch(forwardChecking bool, mrv bool, lcv bool) Assi
 }
 
 func (csp CSP) Backtrack(assignment Assignment, forwardChecking bool, mrv bool, lcv bool) Assignment {
-	//fmt.Println("isComplete(assignment) =", csp.isCompleteAssignment(assignment))
-	if csp.isCompleteAssignment(assignment) {
+	if csp.isComplete(assignment) {
 		return assignment
 	}
 
 	var variable = csp.selectUnassignedVariable(assignment, mrv)
-	//fmt.Println("selecting variable", variable)
-	for _, value := range csp.orderDomainValues(variable) {
-		//fmt.Printf("csp.isConsistent(value: %v, variable: %v, %v) = %v\n", value, variable, assignment, csp.isConsistent(value, variable, assignment))
+	for _, value := range csp.orderDomainValues(assignment, variable, lcv) {
 		assignment[variable] = value
 		if csp.isConsistent(variable, assignment) {
 			if forwardChecking {
@@ -58,9 +53,9 @@ func (csp CSP) Backtrack(assignment Assignment, forwardChecking bool, mrv bool, 
 	return nil
 }
 
-func (csp CSP) isCompleteAssignment(assignment Assignment) bool {
+func (csp CSP) isComplete(assignment Assignment) bool {
 	// all variables have a value that is in their domain
-	for var_id, variable := range csp.variables {
+	for var_id, variable := range csp.domains {
 		if value, ok := assignment[var_id]; ok {
 			if false && !variable.Contains(value) {
 				return false
@@ -80,45 +75,69 @@ func (csp CSP) isCompleteAssignment(assignment Assignment) bool {
 	return true
 }
 
-func (csp CSP) selectUnassignedVariable(assignment Assignment, mrv bool) int {
-	var unassigned = []int{}
-	for variable := range csp.variables {
-		if _, ok := assignment[variable]; !ok {
-			if mrv {
-				unassigned = append(unassigned, variable)
-			} else {
+func (csp CSP) selectUnassignedVariable(assignment Assignment, mrv bool) Variable {
+	if mrv {
+		var min_values int
+		var min_var Variable = -1
+		for _, variable := range csp.variables {
+			if _, ok := assignment[variable]; !ok {
+				if min_var == -1 {
+					min_values = len(csp.domains[variable])
+					min_var = variable
+				}
+				if trial := len(csp.domains[variable]); trial < min_values {
+					min_values = trial
+					min_var = variable
+				}
+
+				if min_values == 1 {
+					return min_var
+				}
+			}
+		}
+		return min_var
+	} else {
+		for variable := range csp.domains {
+			if _, ok := assignment[variable]; !ok {
 				return variable
+			}
+		}
+		panic("All variables have been assigned")
+	}
+}
+
+func (csp CSP) orderDomainValues(assignment Assignment, variable Variable, lcv bool) Domain {
+	if !lcv {
+		return csp.domains[variable]
+	}
+	var domain Domain = csp.domains[variable]
+	var num_constraints = make([]int, len(domain))
+	for i, val := range domain {
+		for _, neighbor := range csp.getNeighbors(variable) {
+			if _, ok := assignment[neighbor]; !ok && csp.domains[neighbor].Contains(val) {
+				num_constraints[i] = num_constraints[i] + 1
 			}
 		}
 	}
 
-	if len(unassigned) == 0 {
-		panic("All variables have been assigned")
-	}
-
-	var min_values int = len(csp.variables[unassigned[0]].domain)
-	var min_var int = unassigned[0]
-	for variable := range csp.variables {
-		if trial := len(csp.variables[variable].domain); trial < min_values {
-			min_values = trial
-			min_var = variable
+	for i := 0; i < len(domain); i++ {
+		for j := i + 1; j < len(domain); j++ {
+			if num_constraints[j] < num_constraints[i] {
+				var temp = domain[i]
+				domain[i] = domain[j]
+				domain[j] = temp
+			}
 		}
 	}
 
-	return min_var
-}
-
-// the book says this function takes assignment so do this later
-func (csp CSP) orderDomainValues(variable int) []int {
-	return csp.variables[variable].domain[:]
+	return domain
 }
 
 /**
  * Checks that none of the constraints have been violated by the assignment of a variable
  * Only checks constraints relating to that variable
  **/
-func (csp CSP) isConsistent(variable int, assignment Assignment) bool {
-
+func (csp CSP) isConsistent(variable Variable, assignment Assignment) bool {
 	for _, c := range csp.constraints {
 		if c.constrains(variable) {
 			switch c.getType() {
@@ -126,7 +145,6 @@ func (csp CSP) isConsistent(variable int, assignment Assignment) bool {
 				for _, cons_var := range c.constrained {
 					assigned_value, isAssigned := assignment[cons_var]
 					if cons_var != variable && isAssigned && assigned_value == assignment[variable] {
-						// fmt.Println("isConsistent not_equals:", cons_var, variable, isAssigned, assigned_value, value)
 						return false
 					}
 				}
@@ -141,7 +159,6 @@ func (csp CSP) isConsistent(variable int, assignment Assignment) bool {
 					if isAssigned {
 						sum += assigned_value
 						if sum > c.sum {
-							// fmt.Println("IsConsistent sum 1:", sum, c.sum)
 							return false
 						}
 					} else {
@@ -149,10 +166,7 @@ func (csp CSP) isConsistent(variable int, assignment Assignment) bool {
 					}
 				}
 
-				// if (num_unassigned == 0 && sum == c.sum) || sum < c.sum-min_sum(num_unassigned) {
-				if (num_unassigned == 0 && sum == c.sum) || sum >= c.sum-min_sum(num_unassigned)+assignment[variable] {
-					panic("not here yet")
-					// fmt.Println("IsConsistent sum 2:", num_unassigned, sum, c.sum-min_sum(num_unassigned)+value)
+				if (num_unassigned == 0 && sum != c.sum) || sum > c.sum-min_sum(num_unassigned) {
 					return false
 				}
 			}
@@ -162,11 +176,14 @@ func (csp CSP) isConsistent(variable int, assignment Assignment) bool {
 	return true
 }
 
-func (csp CSP) forwardCheck(variable int, assignment Assignment) []Inference {
+/**
+ * Evaluate domain values that could be removed and return them
+ **/
+func (csp CSP) forwardCheck(variable Variable, assignment Assignment) []Inference {
 	var inferences = []Inference{}
 
 	for _, neighbor := range csp.getNeighbors(variable) {
-		if csp.variables[neighbor].Contains(assignment[variable]) {
+		if csp.domains[neighbor].Contains(assignment[variable]) {
 			inferences = append(inferences, Inference{
 				variable:     neighbor,
 				domain_value: assignment[variable],
@@ -174,24 +191,31 @@ func (csp CSP) forwardCheck(variable int, assignment Assignment) []Inference {
 		}
 	}
 
-	return inferences
+	return inferences[:]
 }
 
+/**
+ * Take the list of Inferences and apply to the CSP
+ */
 func (csp CSP) addInferences(inferences []Inference) {
 	for _, inference := range inferences {
-		csp.RemoveFromDomain(inference.variable, inference.domain_value)
+		csp.removeFromDomain(inference.variable, inference.domain_value)
 	}
 }
 
+/**
+ * Take the list of Inferences and remove from the CSP
+ */
 func (csp CSP) removeInferences(inferences []Inference) {
 	for _, inference := range inferences {
-		csp.AddToDomain(inference.variable, inference.domain_value)
+		csp.addToDomain(inference.variable, inference.domain_value)
 	}
 }
 
 /**
  * Returns the minimum sum of n non-repeating positive integers
  * Returns value of n(n+1)/2 for n 0-9 and otherwise calculates n(n+1)/2
+ * used to prove the inconsistency of sum constraints which have unassigned variables
  */
 func min_sum(n int) int {
 	switch n {
@@ -215,7 +239,7 @@ func min_sum(n int) int {
 		return 36
 	case 9:
 		return 25
-	default:
+	default: // won't be called but exists for completeness
 		return n * (n + 1) / 2
 	}
 }

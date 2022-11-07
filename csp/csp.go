@@ -6,43 +6,60 @@ import (
 )
 
 type CSP struct {
-	variables   map[int]Variable
+	variables   []Variable
+	domains     map[Variable]Domain
 	constraints []Constraint
 }
 
 func NewCSP() CSP {
 	return CSP{
-		variables:   map[int]Variable{},
+		variables:   []Variable{},
+		domains:     map[Variable]Domain{},
 		constraints: []Constraint{},
 	}
 }
 
-func (csp CSP) Insert(id int, domain []int) {
-	csp.variables[id] = NewVariable(domain)
+/**
+ * Inserts a variable with a domain into the CSP
+ */
+func (csp *CSP) Insert(variable int, domain Domain) {
+	if !util.Contains(csp.variables, Variable(variable)) {
+		csp.variables = append(csp.variables, Variable(variable))
+	}
+	csp.domains[Variable(variable)] = NewDomain(domain)
 }
 
-func (csp CSP) RemoveFromDomain(var_id int, value int) {
-	csp.variables[var_id] = csp.variables[var_id].Remove(value)
-}
-
-func (csp CSP) AddToDomain(var_id int, value int) {
-	csp.variables[var_id] = csp.variables[var_id].Add(value)
-}
-
+/**
+ * Inserts a NOT_EQUALS constraint across vars into the CSP
+ **/
 func (csp *CSP) Constrain(vars ...int) {
 	csp.constraints = append(csp.constraints, NewNotEqualsConstraint(vars...))
 }
 
+/**
+ * Inserts a SUM constraint of sum across vars into the CSP
+ **/
 func (csp *CSP) ConstrainSum(sum int, vars ...int) {
 	csp.constraints = append(csp.constraints, NewSumConstraint(sum, vars...))
 }
 
-func (csp CSP) Print() {
-	fmt.Printf("variables(%v): %v\nconstraints(%v): %v\n", len(csp.variables), csp.variables, len(csp.constraints), csp.constraints)
+func (csp CSP) removeFromDomain(variable Variable, value int) {
+	csp.domains[variable] = csp.domains[variable].Remove(value)
 }
 
-func (csp CSP) getNeighbors(variable int) []int {
-	var neighbors = []int{}
+func (csp CSP) addToDomain(variable Variable, value int) {
+	csp.domains[variable] = csp.domains[variable].Add(value)
+}
+
+func (csp CSP) Print() {
+	fmt.Printf("variables(%v): %v\nconstraints(%v): %v\n", len(csp.domains), csp.domains, len(csp.constraints), csp.constraints)
+}
+
+/**
+ * Returns the set of all variables that share a constraint with the input variable within the CSP
+ */
+func (csp CSP) getNeighbors(variable Variable) []Variable {
+	var neighbors = []Variable{}
 	for _, constraint := range csp.constraints { // for each constraint
 		if constraint.constrains(variable) { // if the variable is included
 			for _, neighbor := range constraint.constrained { // for each neighbor in the constraint
@@ -55,6 +72,28 @@ func (csp CSP) getNeighbors(variable int) []int {
 	return neighbors
 }
 
-func (csp CSP) GetVar(n int) Variable {
-	return csp.variables[n]
+func (csp CSP) GetVar(variable Variable) Domain {
+	return csp.domains[variable]
+}
+
+func (csp CSP) GetVars() map[Variable]Domain {
+	return csp.domains
+}
+
+func (csp CSP) GetConstraints() []Constraint {
+	return csp.constraints
+}
+
+func (csp CSP) IsSatisfied(assignment Assignment) bool {
+	if !csp.isComplete(assignment) {
+		return false
+	}
+
+	for k, _ := range assignment {
+		if !csp.isConsistent(k, assignment) {
+			return false
+		}
+	}
+
+	return true
 }
