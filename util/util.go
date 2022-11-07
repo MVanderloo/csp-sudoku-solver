@@ -87,3 +87,7 @@ func MinSlice[T int](arr []T) T {
 
 	return min
 }
+
+func fileExists(filename string) bool {
+	return true
+}
