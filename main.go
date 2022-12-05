@@ -31,7 +31,7 @@ func main() {
 	defer logfile.Close()
 	logger.SetOutput(logfile)
 	logger.Println(time.Now().Format("15:04:05 02/01/06"))
-	logger.Println("Time limit:", config.Time_limit, "(ms)")
+	logger.Println("Time limit:", config.Time_limit, "(s)")
 	logger.Print(util.LogFileSpacer())
 
 	var csp CSP
@@ -65,17 +65,18 @@ func main() {
 								csp = NewKillerSudokuFromString(ksConfig.Inputs[puzzle_id-1].Sudoku, cages).ToCSP()
 							default:
 								fmt.Println("Invalid puzzle type:", input.Type)
+								continue puzzleIdLoop
 							}
-							logger.Println("type:", input.Type, "\npuzzle_id:", puzzle_id, "\ntime limit:", config.Time_limit, "\nac3:", ac3, "\nforward checking:", forward_checking, "\nmrv:", mrv, "\nlcv:", lcv)
+							logger.Println("type:", input.Type, "\npuzzle_id:", puzzle_id, "\nac3:", ac3, "\nforward checking:", forward_checking, "\nmrv:", mrv, "\nlcv:", lcv)
 							start := time.Now()
-							assignment, rec_calls := csp.BacktrackingSearch(ac3, forward_checking, mrv, lcv, time.Duration(config.Time_limit*1e12))
+							assignment, rec_calls := csp.BacktrackingSearch(ac3, forward_checking, mrv, lcv, time.Duration(config.Time_limit*1e9))
 							duration := time.Since(start)
-							logger.Println("Backtracking duration:", duration.Milliseconds(), "(ms)")
+							logger.Println("Backtracking duration:", float64(duration.Milliseconds())/1000, "(s)")
 							logger.Println("Recursive calls:", rec_calls)
 							if csp.IsSatisfied(assignment) {
-								logger.Println("Success")
+								logger.Print("Success: ")
 							} else {
-								logger.Println("No solution found")
+								logger.Print("No solution found: ")
 							}
 							logger.Println(assignment)
 							logger.Print(util.LogFileSpacer())

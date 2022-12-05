@@ -1,0 +1,124 @@
+{
+    "log file": "log.txt",
+    "time limit": 60,
+    "input files": {
+        "directory": "puzzles/",
+        "sudoku": "sudoku.txt",
+        "overlap sudoku": "overlap_sudoku.txt",
+        "killer sudoku": "killer_sudoku.json"
+    },
+    "inputs": [
+        {
+            "type": 1,
+            "presets": [1,2,3,4,5,6,7,8,9,10],
+            "ac3": [true],
+            "forward checking": [true],
+            "mrv heuristic": [true],
+            "lcv heuristic": [true]
+        },
+        {
+            "type": 1,
+            "presets": [1],
+            "ac3": [true, false],
+            "forward checking": [true, false],
+            "mrv heuristic": [true],
+            "lcv heuristic": [true]
+        },
+        {
+            "type": 1,
+            "presets": [2],
+            "ac3": [true, false],
+            "forward checking": [true],
+            "mrv heuristic": [true, false],
+            "lcv heuristic": [true]
+        },
+        {
+            "type": 1,
+            "presets": [3],
+            "ac3": [true, false],
+            "forward checking": [true],
+            "mrv heuristic": [true],
+            "lcv heuristic": [true, false]
+        },
+        {
+            "type": 1,
+            "presets": [4],
+            "ac3": [true],
+            "forward checking": [true, false],
+            "mrv heuristic": [true, false],
+            "lcv heuristic": [true]
+        },
+        {
+            "type": 1,
+            "presets": [5],
+            "ac3": [true],
+            "forward checking": [true, false],
+            "mrv heuristic": [true],
+            "lcv heuristic": [true, false]
+        },
+        {
+            "type": 1,
+            "presets": [6],
+            "ac3": [true],
+            "forward checking": [true],
+            "mrv heuristic": [true, false],
+            "lcv heuristic": [true, false]
+        },
+        {
+            "type": 2,
+            "presets": [1,2,3,4,5,6,7,8,9,10],
+            "ac3": [true],
+            "forward checking": [true],
+            "mrv heuristic": [true],
+            "lcv heuristic": [true]
+        },
+        {
+            "type": 2,
+            "presets": [2],
+            "ac3": [true, false],
+            "forward checking": [true, false],
+            "mrv heuristic": [true],
+            "lcv heuristic": [true]
+        },
+        {
+            "type": 2,
+            "presets": [3],
+            "ac3": [true, false],
+            "forward checking": [true],
+            "mrv heuristic": [true, false],
+            "lcv heuristic": [true]
+        },
+        {
+            "type": 2,
+            "presets": [4],
+            "ac3": [true, false],
+            "forward checking": [true],
+            "mrv heuristic": [true],
+            "lcv heuristic": [true, false]
+        },
+        {
+            "type": 2,
+            "presets": [5],
+            "ac3": [true],
+            "forward checking": [true, false],
+            "mrv heuristic": [true, false],
+            "lcv heuristic": [true]
+        },
+        {
+            "type": 2,
+            "presets": [6],
+            "ac3": [true],
+            "forward checking": [true, false],
+            "mrv heuristic": [true],
+            "lcv heuristic": [true, false]
+        },
+        {
+            "type": 2,
+            "presets": [7],
+            "ac3": [true],
+            "forward checking": [true],
+            "mrv heuristic": [true, false],
+            "lcv heuristic": [true, false]
+        }
+    ]
+}
