@@ -1,6 +1,5 @@
-# Tile Puzzle AI
+# Backtracking Sudoku Solver
 
-### CS 420 Project 1
 ### Michael Vanderloo
 
 This project was done in golang. You will need to install golang and update GOPATH to include this directory. 
